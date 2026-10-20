@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using Autodesk.Revit.DB;
 
-namespace ARYE.RegionArea.Services
+namespace ARYE.OfficeTools.Services
 {
     /// <summary>
     /// Result of the geometric area computation of a single FilledRegion.

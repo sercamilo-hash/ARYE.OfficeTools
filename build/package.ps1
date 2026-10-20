@@ -1,30 +1,30 @@
-# Builds ARYE Region Area in Release and packs the zip the office installs from:
-#   dist\ARYE.RegionArea-<version>-Revit2026.zip
+# Builds ARYE Office Tools in Release and packs the zip the office installs from:
+#   dist\ARYE.OfficeTools-<version>-Revit2026.zip
 # Layout inside the zip:
 #   Install.bat, Uninstall.bat, README.txt
 #   installer\install.ps1, installer\uninstall.ps1
-#   payload\ARYE.RegionArea.addin, payload\ARYE.RegionArea\ (dll + Resources)
+#   payload\ARYE.OfficeTools.addin, payload\ARYE.OfficeTools\ (dll + Resources)
 
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
-$proj = Join-Path $repo 'src\ARYE.RegionArea\ARYE.RegionArea.csproj'
+$proj = Join-Path $repo 'src\ARYE.OfficeTools\ARYE.OfficeTools.csproj'
 
 dotnet build $proj -c Release --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 
-$bin = Join-Path $repo 'src\ARYE.RegionArea\bin\Release'
-$dll = Join-Path $bin 'ARYE.RegionArea.dll'
+$bin = Join-Path $repo 'src\ARYE.OfficeTools\bin\Release'
+$dll = Join-Path $bin 'ARYE.OfficeTools.dll'
 $version = (Get-Item $dll).VersionInfo.ProductVersion -replace '\+.*$', ''
 
-$name  = "ARYE.RegionArea-$version-Revit2026"
+$name  = "ARYE.OfficeTools-$version-Revit2026"
 $dist  = Join-Path $repo 'dist'
 $stage = Join-Path $dist $name
 if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
-New-Item -ItemType Directory -Force -Path "$stage\installer", "$stage\payload\ARYE.RegionArea" | Out-Null
+New-Item -ItemType Directory -Force -Path "$stage\installer", "$stage\payload\ARYE.OfficeTools" | Out-Null
 
-Copy-Item $dll, (Join-Path $bin 'ARYE.RegionArea.deps.json') "$stage\payload\ARYE.RegionArea"
-Copy-Item -Recurse (Join-Path $bin 'Resources') "$stage\payload\ARYE.RegionArea\Resources"
-Copy-Item (Join-Path $repo 'installer\ARYE.RegionArea.addin') "$stage\payload"
+Copy-Item $dll, (Join-Path $bin 'ARYE.OfficeTools.deps.json') "$stage\payload\ARYE.OfficeTools"
+Copy-Item -Recurse (Join-Path $bin 'Resources') "$stage\payload\ARYE.OfficeTools\Resources"
+Copy-Item (Join-Path $repo 'installer\ARYE.OfficeTools.addin') "$stage\payload"
 Copy-Item (Join-Path $repo 'installer\install.ps1'), (Join-Path $repo 'installer\uninstall.ps1') "$stage\installer"
 
 # cmd.exe expects CRLF in .bat files; normalise whatever line endings git checked out.

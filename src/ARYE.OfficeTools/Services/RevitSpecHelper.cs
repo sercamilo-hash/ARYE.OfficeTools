@@ -2,7 +2,7 @@
 using System;
 using Autodesk.Revit.DB;
 
-namespace ARYE.RegionArea.Services
+namespace ARYE.OfficeTools.Services
 {
     /// <summary>
     /// Null-safe comparison of ForgeTypeId values.

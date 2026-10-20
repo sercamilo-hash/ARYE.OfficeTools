@@ -4,16 +4,16 @@ using System.Reflection;
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.UI;
 
-namespace ARYE.RegionArea
+namespace ARYE.OfficeTools
 {
     /// <summary>
-    /// One ribbon button: ARYE › Energy › Region Area → Param. Keep this thin — a throw here means
-    /// Revit shows a startup error and disables the add-in.
+    /// ARYE Office Tools: two ribbon buttons on ARYE › Zoning — Region Area → Param and Light &amp; Vent.
+    /// Keep this thin — a throw here means Revit shows a startup error and disables the add-in.
     /// </summary>
     public sealed class App : IExternalApplication
     {
         private const string TabName = "ARYE";
-        private const string PanelName = "Energy";
+        private const string PanelName = "Zoning";
 
         public static Log Log { get; private set; }
 
@@ -25,7 +25,7 @@ namespace ARYE.RegionArea
             try
             {
                 Log = new Log();
-                Log.Info($"ARYE Region Area {Version} starting under Revit {application.ControlledApplication.VersionNumber}");
+                Log.Info($"ARYE Office Tools {Version} starting under Revit {application.ControlledApplication.VersionNumber}");
 
                 try { application.CreateRibbonTab(TabName); }
                 catch (Autodesk.Revit.Exceptions.ArgumentException)
@@ -35,8 +35,9 @@ namespace ARYE.RegionArea
 
                 RibbonPanel panel = application.CreateRibbonPanel(TabName, PanelName);
                 string assemblyPath = Assembly.GetExecutingAssembly().Location;
+                string assemblyDir = Path.GetDirectoryName(assemblyPath);
 
-                var button = new PushButtonData(
+                var regionAreaButton = new PushButtonData(
                     "ARYE_RegionAreaToParameter",
                     "Region Area\n→ Param",
                     assemblyPath,
@@ -51,15 +52,34 @@ namespace ARYE.RegionArea
                         "against Revit's own Area. The target selector only lists parameters that exist on those regions " +
                         "and are writable. Building and Side can be filled in the same run. Version " + Version + "."
                 };
-                ApplyIcon(button, Path.GetDirectoryName(assemblyPath), "icon_region_area");
-                panel.AddItem(button);
+                ApplyIcon(regionAreaButton, assemblyDir, "icon_region_area");
+                panel.AddItem(regionAreaButton);
+
+                var lightVentButton = new PushButtonData(
+                    "ARYE_RoomLightVent",
+                    "Light &\nVent",
+                    assemblyPath,
+                    typeof(Commands.CommandRoomLightVent).FullName)
+                {
+                    ToolTip = "Adds up the light area and the vent area of each room's exterior windows and " +
+                              "writes the two totals to the room, after a plan preview and a before/after table.",
+                    LongDescription =
+                        "Uses the rooms visible in the active plan view, or only the rooms you selected first. " +
+                        "A window counts for a room when exactly one of its sides (FromRoom/ToRoom, in the view's " +
+                        "phase) has a room; window panels in curtain walls count too, skylights do not. Window " +
+                        "and room parameters are picked from lists of every parameter in the model. Empty values " +
+                        "are not added, rooms without exterior windows are left unchanged, and every skipped " +
+                        "window is listed with its reason. Version " + Version + "."
+                };
+                ApplyIcon(lightVentButton, assemblyDir, "icon_light_vent");
+                panel.AddItem(lightVentButton);
 
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
                 Log?.Error("Startup failed", ex);
-                TaskDialog.Show("ARYE Region Area", "Failed to start:\n" + ex.Message);
+                TaskDialog.Show("ARYE Office Tools", "Failed to start:\n" + ex.Message);
                 return Result.Failed;
             }
         }
@@ -77,13 +97,13 @@ namespace ARYE.RegionArea
     }
 
     /// <summary>
-    /// Minimal file log in %LOCALAPPDATA%\ARYE\RegionArea\logs — one file per day. A failure to
+    /// Minimal file log in %LOCALAPPDATA%\ARYE\OfficeTools\logs — one file per day. A failure to
     /// write the log is reported to the debugger and never stops the tool.
     /// </summary>
     public sealed class Log
     {
         private readonly string _dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ARYE", "RegionArea", "logs");
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ARYE", "OfficeTools", "logs");
 
         public string Folder => _dir;
 
@@ -102,11 +122,11 @@ namespace ARYE.RegionArea
             }
             catch (IOException ex)
             {
-                System.Diagnostics.Debug.WriteLine("ARYE Region Area log failed: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("ARYE Office Tools log failed: " + ex.Message);
             }
             catch (UnauthorizedAccessException ex)
             {
-                System.Diagnostics.Debug.WriteLine("ARYE Region Area log failed: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("ARYE Office Tools log failed: " + ex.Message);
             }
         }
     }

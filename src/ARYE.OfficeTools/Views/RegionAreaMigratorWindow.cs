@@ -9,8 +9,8 @@ using System.Windows.Data;
 using System.Windows.Media;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using ARYE.RegionArea.Models;
-using ARYE.RegionArea.Services;
+using ARYE.OfficeTools.Models;
+using ARYE.OfficeTools.Services;
 // Autodesk.Revit.UI and Autodesk.Revit.DB each declare their own ComboBox/TextBox/Color —
 // legacy in-canvas UI types unrelated to WPF. Alias to the WPF ones this window actually uses.
 using ComboBox = System.Windows.Controls.ComboBox;
@@ -19,7 +19,7 @@ using Color = System.Windows.Media.Color;
 using Grid = System.Windows.Controls.Grid;
 using Binding = System.Windows.Data.Binding;
 
-namespace ARYE.RegionArea.Views
+namespace ARYE.OfficeTools.Views
 {
     /// <summary>
     /// BauTools — Region Area → Parameter.

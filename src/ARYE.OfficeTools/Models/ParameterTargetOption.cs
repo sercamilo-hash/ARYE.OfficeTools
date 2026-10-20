@@ -1,9 +1,9 @@
 #nullable disable
 using System;
 using Autodesk.Revit.DB;
-using ARYE.RegionArea.Services;
+using ARYE.OfficeTools.Services;
 
-namespace ARYE.RegionArea.Models
+namespace ARYE.OfficeTools.Models
 {
     public enum TargetBinding
     {

@@ -1,13 +1,13 @@
-# ARYE Region Area - uninstaller for Revit 2026 (per user, no administrator rights).
+# ARYE Office Tools - uninstaller for Revit 2026 (per user, no administrator rights).
 # Run it through Uninstall.bat (double-click).
 
 $ErrorActionPreference = 'Stop'
 $RevitVersion = '2026'
-$Name = 'ARYE.RegionArea'
+$Name = 'ARYE.OfficeTools'
 $addins = Join-Path $env:APPDATA "Autodesk\Revit\Addins\$RevitVersion"
 
 Write-Host ''
-Write-Host "ARYE Region Area - uninstall from Revit $RevitVersion" -ForegroundColor Cyan
+Write-Host "ARYE Office Tools - uninstall from Revit $RevitVersion" -ForegroundColor Cyan
 Write-Host ''
 
 if (Get-Process -Name 'Revit' -ErrorAction SilentlyContinue) {
@@ -22,7 +22,7 @@ if (Test-Path $manifest) { Remove-Item -Force $manifest; $removed++ }
 if (Test-Path $folder) { Remove-Item -Recurse -Force $folder; $removed++ }
 
 if ($removed -eq 0) {
-    Write-Host '[!] Nothing to remove: ARYE Region Area was not installed for this user.' -ForegroundColor Yellow
+    Write-Host '[!] Nothing to remove: ARYE Office Tools was not installed for this user.' -ForegroundColor Yellow
 } else {
     Write-Host "[OK] Removed from $addins" -ForegroundColor Green
 }

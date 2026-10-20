@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    ARYE Region Area — a single Revit add-in button, extracted from BauTools (Region Area → Param).
+    ARYE Office Tools — two Revit add-in buttons from BauTools: Region Area → Param and Light & Vent.
     Revit 2026 · .NET 8. The Revit API comes from Nice3point's reference-only packages:
     ExcludeAssets="runtime" keeps RevitAPI.dll out of the output (it is Autodesk's, loaded by Revit).
   -->
@@ -10,12 +10,12 @@
     <UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>latest</LangVersion>
-    <RootNamespace>ARYE.RegionArea</RootNamespace>
-    <AssemblyName>ARYE.RegionArea</AssemblyName>
+    <RootNamespace>ARYE.OfficeTools</RootNamespace>
+    <AssemblyName>ARYE.OfficeTools</AssemblyName>
     <RevitVersion>2026</RevitVersion>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Company>ARYE</Company>
-    <Product>ARYE Region Area</Product>
+    <Product>ARYE Office Tools</Product>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

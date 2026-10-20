@@ -1,18 +1,18 @@
-# ARYE Region Area - installer for Revit 2026.
+# ARYE Office Tools - installer for Revit 2026.
 # Per-user install, no administrator rights: copies the add-in to
 #   %APPDATA%\Autodesk\Revit\Addins\2026\
 # Run it through Install.bat (double-click).
 
 $ErrorActionPreference = 'Stop'
 $RevitVersion = '2026'
-$Name = 'ARYE.RegionArea'
+$Name = 'ARYE.OfficeTools'
 
 $root    = Split-Path -Parent $PSScriptRoot
 $payload = Join-Path $root 'payload'
 $addins  = Join-Path $env:APPDATA "Autodesk\Revit\Addins\$RevitVersion"
 
 Write-Host ''
-Write-Host "ARYE Region Area - install for Revit $RevitVersion" -ForegroundColor Cyan
+Write-Host "ARYE Office Tools - install for Revit $RevitVersion" -ForegroundColor Cyan
 Write-Host ''
 
 if (-not (Test-Path (Join-Path $payload "$Name.addin"))) {
@@ -33,6 +33,16 @@ if (Get-Process -Name 'Revit' -ErrorAction SilentlyContinue) {
 }
 
 New-Item -ItemType Directory -Force -Path $addins | Out-Null
+
+# 1.0.0 shipped as "ARYE.RegionArea" with the same ClientId. Two manifests with one ClientId
+# make Revit refuse the second add-in, so the old install is removed and reported.
+$old = 'ARYE.RegionArea'
+if ((Test-Path (Join-Path $addins "$old.addin")) -or (Test-Path (Join-Path $addins $old))) {
+    Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $addins "$old.addin")
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $addins $old)
+    Write-Host '[OK] Removed the previous version (ARYE Region Area 1.0.0).' -ForegroundColor Green
+}
+
 $target = Join-Path $addins $Name
 if (Test-Path $target) { Remove-Item -Recurse -Force $target }
 
@@ -50,9 +60,9 @@ if (-not (Test-Path $dll)) {
     exit 1
 }
 
-$version = (Get-Item $dll).VersionInfo.ProductVersion
+$version = (Get-Item $dll).VersionInfo.ProductVersion -replace '\+.*$', ''
 Write-Host "[OK] Installed version $version in $addins" -ForegroundColor Green
 Write-Host ''
-Write-Host 'Open Revit 2026: the button is on the ARYE tab, Energy panel, "Region Area -> Param".'
+Write-Host 'Open Revit 2026: the ARYE tab, Zoning panel, has two buttons: "Region Area -> Param" and "Light & Vent".'
 Write-Host 'The first time, Revit may ask whether to load the add-in: choose "Always Load".'
 exit 0

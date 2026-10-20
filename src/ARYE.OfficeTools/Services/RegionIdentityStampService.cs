@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Autodesk.Revit.DB;
-using ARYE.RegionArea.Models;
+using ARYE.OfficeTools.Models;
 
-namespace ARYE.RegionArea.Services
+namespace ARYE.OfficeTools.Services
 {
     /// <summary>One discovered value for Building or Side, with how many regions already carry it.</summary>
     public class IdentityValueOption

@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
-using ARYE.RegionArea.Models;
+using ARYE.OfficeTools.Models;
 
-namespace ARYE.RegionArea.Services
+namespace ARYE.OfficeTools.Services
 {
     /// <summary>
     /// Builds the target-parameter selector by inspecting the actual selected elements.

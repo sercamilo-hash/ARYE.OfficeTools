@@ -1,7 +1,7 @@
 #nullable disable
 using System;
 
-namespace ARYE.RegionArea.Models
+namespace ARYE.OfficeTools.Models
 {
     public enum OverwritePolicy
     {
