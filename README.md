@@ -89,7 +89,7 @@ installed to build.
 3. **To add or remove a button**: edit `buttons` in `build/promote.json` (its command file is the seed),
    run the same command with `--discover` to recompute the file list, and add or remove the button in
    `App.cs` and under `ARYE.tab/`.
-4. Raise `<Version>` in `src/ARYE.OfficeTools/ARYE.OfficeTools.csproj`, run `.uild\package.ps1`
+4. Raise `<Version>` in `src/ARYE.OfficeTools/ARYE.OfficeTools.csproj`, run `.\build\package.ps1`
    (Release build, copies the DLL to `bin/` for pyRevit, writes the zip), commit including
    `bin/ARYE.OfficeTools.dll`, push, and attach the zip to a GitHub release tagged `v<version>`.
 
