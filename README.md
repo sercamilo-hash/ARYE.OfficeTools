@@ -12,6 +12,8 @@ The BauTools buttons **approved for the office**, as a Revit 2026 add-in on the 
 | Zoning | **Light & Vent** | Adds up the light and vent area of each room's exterior windows and writes the totals to the room. |
 | Help | **About** | Version, the BauTools commit the buttons come from, log folder. |
 
+**Installation guide for the office: [INSTALL.md](INSTALL.md).**
+
 ## How this repo relates to BauTools
 
 [BauTools](https://github.com/sercamilo-hash/BauTools-v2) is the development repo and changes all the time.
