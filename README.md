@@ -12,7 +12,40 @@ Both come from [BauTools](https://github.com/sercamilo-hash/BauTools-v2), packed
 office can install just these two tools. BauTools keeps its own copy of both buttons; the two add-ins
 can be installed side by side. A fix made in one copy has to be carried to the other by hand.
 
-## Install (office)
+## Install with pyRevit (recommended for the office)
+
+This repository is also a pyRevit extension: pyRevit clones it and the two buttons appear on the
+**ARYE** tab, **Zoning** panel. Requires pyRevit installed for Revit 2026.
+
+**Option A — from pyRevit's Extensions window**
+
+1. Once per computer, make the extension appear in the list. Run `pyRevit-AddSource.bat` (it is in the
+   release zip and in `installer/`), or run these two lines in a Command Prompt:
+
+   ```bat
+   powershell -Command "iwr -UseBasicParsing https://raw.githubusercontent.com/sercamilo-hash/ARYE.OfficeTools/main/extensions.json -OutFile $env:APPDATA\pyRevit\ARYE.extensions.json"
+   pyrevit extensions sources add "%APPDATA%\pyRevit\ARYE.extensions.json"
+   ```
+
+   pyRevit lists only extensions whose definition file is on disk, which is why the definition is
+   downloaded first.
+2. In Revit: **pyRevit** tab › **Extensions**, find **ARYEOfficeTools**, click **Install Extension**,
+   and let pyRevit reload.
+
+**Option B — one command**
+
+```bat
+pyrevit extend ui ARYEOfficeTools https://github.com/sercamilo-hash/ARYE.OfficeTools.git
+```
+
+Then reload pyRevit (pyRevit tab › Reload) or restart Revit.
+
+**Update:** close Revit first (Revit locks the DLL while it is open), then pyRevit tab › Extensions ›
+ARYEOfficeTools › Update, or `pyrevit extensions update ARYEOfficeTools`.
+
+Do not install it both with pyRevit and with `Install.bat`: the buttons would appear twice.
+
+## Install without pyRevit (Install.bat)
 
 1. Download `ARYE.OfficeTools-<version>-Revit2026.zip` from the latest
    [release](https://github.com/sercamilo-hash/ARYE.OfficeTools/releases), or take it from the office
@@ -42,7 +75,8 @@ Version 1.1.0 renamed the add-in from `ARYE.RegionArea` to `ARYE.OfficeTools`; `
 1.0.0 install it finds.
 
 To publish a new version: raise `<Version>` in `src/ARYE.OfficeTools/ARYE.OfficeTools.csproj`, run
-`package.ps1`, commit, and attach the zip to a GitHub release tagged `v<version>`.
+`package.ps1`, commit (including `bin/ARYE.OfficeTools.dll`, which pyRevit users get with every update),
+push, and attach the zip to a GitHub release tagged `v<version>`.
 
 ## Layout
 
@@ -52,7 +86,9 @@ To publish a new version: raise `<Version>` in `src/ARYE.OfficeTools/ARYE.Office
 | `src/ARYE.OfficeTools/Core/` | Revit-free logic of Light & Vent (which room a window counts for, totals) |
 | `tests/ARYE.OfficeTools.Tests/` | xUnit tests of `Core/`, compiled without Revit: `dotnet test tests/ARYE.OfficeTools.Tests` |
 | `installer/` | `.addin` manifest, `Install.bat` / `Uninstall.bat` and the PowerShell scripts they run, zip `README.txt` |
-| `build/package.ps1` | Builds and packs the release zip |
+| `build/package.ps1` | Builds, copies the DLL to `bin/` and packs the release zip |
+| `ARYE.tab/`, `bin/`, `extension.json` | The pyRevit extension: two link buttons that run the commands of `bin/ARYE.OfficeTools.dll` |
+| `extensions.json` | Extension definition that `pyRevit-AddSource.bat` registers, so pyRevit's Extensions window lists it |
 
 The `.addin` manifest points to the DLL with a path **relative** to itself. Never point it at a network
 share: deploy binaries locally on each machine. Never change its `ClientId`.

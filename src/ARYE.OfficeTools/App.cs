@@ -15,7 +15,9 @@ namespace ARYE.OfficeTools
         private const string TabName = "ARYE";
         private const string PanelName = "Zoning";
 
-        public static Log Log { get; private set; }
+        // Created on first use, not in OnStartup: when the buttons come from the pyRevit extension,
+        // Revit never runs this IExternalApplication, but the commands still log their errors.
+        public static Log Log { get; } = new Log();
 
         public static string Version =>
             Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
@@ -24,7 +26,6 @@ namespace ARYE.OfficeTools
         {
             try
             {
-                Log = new Log();
                 Log.Info($"ARYE Office Tools {Version} starting under Revit {application.ControlledApplication.VersionNumber}");
 
                 try { application.CreateRibbonTab(TabName); }

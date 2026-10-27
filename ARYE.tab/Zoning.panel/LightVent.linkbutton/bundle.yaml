@@ -1,0 +1,8 @@
+title: "Light &\nVent"
+tooltip: >-
+  Adds up the light area and the vent area of each room's exterior windows and writes
+  the two totals to the room, after a plan preview and a before/after table. Uses the
+  rooms visible in the active plan view, or only the rooms you selected first.
+author: ARYE
+assembly: ARYE.OfficeTools
+command_class: ARYE.OfficeTools.Commands.CommandRoomLightVent

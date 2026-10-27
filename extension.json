@@ -1,0 +1,14 @@
+{
+    "builtin": "False",
+    "default_enabled": "True",
+    "type": "extension",
+    "rocket_mode_compatible": "True",
+    "name": "ARYEOfficeTools",
+    "description": "ARYE Office Tools for Revit 2026: Region Area to Param and Light & Vent (ARYE tab, Zoning panel).",
+    "author": "ARYE",
+    "author_profile": "https://github.com/sercamilo-hash",
+    "url": "https://github.com/sercamilo-hash/ARYE.OfficeTools.git",
+    "website": "https://github.com/sercamilo-hash/ARYE.OfficeTools",
+    "image": "",
+    "dependencies": []
+}

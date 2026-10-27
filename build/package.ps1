@@ -16,6 +16,11 @@ $bin = Join-Path $repo 'src\ARYE.OfficeTools\bin\Release'
 $dll = Join-Path $bin 'ARYE.OfficeTools.dll'
 $version = (Get-Item $dll).VersionInfo.ProductVersion -replace '\+.*$', ''
 
+# The repo root is also a pyRevit extension: its link buttons load the DLL from bin\.
+# pyRevit clones the repo as-is, so the built DLL is committed there.
+New-Item -ItemType Directory -Force -Path (Join-Path $repo 'bin') | Out-Null
+Copy-Item -Force $dll (Join-Path $repo 'bin\ARYE.OfficeTools.dll')
+
 $name  = "ARYE.OfficeTools-$version-Revit2026"
 $dist  = Join-Path $repo 'dist'
 $stage = Join-Path $dist $name
@@ -28,7 +33,7 @@ Copy-Item (Join-Path $repo 'installer\ARYE.OfficeTools.addin') "$stage\payload"
 Copy-Item (Join-Path $repo 'installer\install.ps1'), (Join-Path $repo 'installer\uninstall.ps1') "$stage\installer"
 
 # cmd.exe expects CRLF in .bat files; normalise whatever line endings git checked out.
-foreach ($bat in 'Install.bat', 'Uninstall.bat') {
+foreach ($bat in 'Install.bat', 'Uninstall.bat', 'pyRevit-AddSource.bat') {
     $text = (Get-Content -Raw (Join-Path $repo "installer\$bat")) -replace "`r?`n", "`r`n"
     [System.IO.File]::WriteAllText((Join-Path $stage $bat), $text, (New-Object System.Text.ASCIIEncoding))
 }

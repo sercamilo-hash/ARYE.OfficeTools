@@ -29,3 +29,9 @@ No administrator rights are needed: everything is installed for your
 Windows user only, in %APPDATA%\Autodesk\Revit\Addins\2026\.
 
 Problems? Send the log in %LOCALAPPDATA%\ARYE\OfficeTools\logs\
+
+WITH pyRevit INSTEAD
+If you use pyRevit, you can install the same two buttons as a pyRevit
+extension and update them from pyRevit. Do not use both methods.
+1. Run pyRevit-AddSource.bat once.
+2. In Revit: pyRevit tab > Extensions > ARYEOfficeTools > Install Extension.
