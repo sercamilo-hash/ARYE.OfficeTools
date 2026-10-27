@@ -2,5 +2,5 @@ title: "Generate\nLevels"
 tooltip: >-
   Batch-creates a run of evenly-spaced levels from a base elevation and a typical floor-to-floor height. Levels that would collide with one already in the model are skipped, never overwritten.
 author: ARYE
-assembly: ARYE.OfficeTools
+assembly: ../../../bin/ARYE.OfficeTools.dll
 command_class: ARYE.OfficeTools.Commands.GenerateLevelsCommand

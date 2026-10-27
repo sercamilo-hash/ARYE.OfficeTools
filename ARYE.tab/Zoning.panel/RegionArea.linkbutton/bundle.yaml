@@ -5,5 +5,5 @@ tooltip: >-
   that must be confirmed before anything is written. Building and Side can be filled
   in the same run.
 author: ARYE
-assembly: ARYE.OfficeTools
+assembly: ../../../bin/ARYE.OfficeTools.dll
 command_class: ARYE.OfficeTools.Commands.CommandRegionAreaToParameter

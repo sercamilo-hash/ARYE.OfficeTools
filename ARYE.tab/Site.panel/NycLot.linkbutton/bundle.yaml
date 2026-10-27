@@ -5,5 +5,5 @@ tooltip: >-
   choose in context: adjacent lots, block, sidewalk, 3D masses and street names.
   Needs an internet connection.
 author: ARYE
-assembly: ARYE.OfficeTools
+assembly: ../../../bin/ARYE.OfficeTools.dll
 command_class: ARYE.OfficeTools.Commands.CommandNycLot

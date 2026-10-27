@@ -2,5 +2,5 @@ title: "Bubble\nHeads"
 tooltip: >-
   Shows or hides the End0/End1 bubble on every Grid and Level in the active view, with quick presets or per-end control.
 author: ARYE
-assembly: ARYE.OfficeTools
+assembly: ../../../bin/ARYE.OfficeTools.dll
 command_class: ARYE.OfficeTools.Commands.CommandBubbleHeads
