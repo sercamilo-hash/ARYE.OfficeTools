@@ -3,16 +3,19 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.UI;
+using ARYE.OfficeTools.Core.Logging;
 
 namespace ARYE.OfficeTools
 {
     /// <summary>
-    /// ARYE Office Tools: two ribbon buttons on ARYE › Zoning — Region Area → Param and Light &amp; Vent.
+    /// ARYE Office Tools, on the ARYE tab: Site › NYC Lot Boundary, and Zoning › Region Area → Param
+    /// and Light &amp; Vent.
     /// Keep this thin — a throw here means Revit shows a startup error and disables the add-in.
     /// </summary>
     public sealed class App : IExternalApplication
     {
         private const string TabName = "ARYE";
+        private const string SitePanelName = "Site";
         private const string PanelName = "Zoning";
 
         // Created on first use, not in OnStartup: when the buttons come from the pyRevit extension,
@@ -34,9 +37,31 @@ namespace ARYE.OfficeTools
                     // Another ARYE add-in already created the tab: share it.
                 }
 
-                RibbonPanel panel = application.CreateRibbonPanel(TabName, PanelName);
                 string assemblyPath = Assembly.GetExecutingAssembly().Location;
                 string assemblyDir = Path.GetDirectoryName(assemblyPath);
+
+                // Panels render left to right in creation order: Site (the lot) before Zoning.
+                RibbonPanel sitePanel = application.CreateRibbonPanel(TabName, SitePanelName);
+                var nycLotButton = new PushButtonData(
+                    "ARYE_NycLot",
+                    "NYC Lot\nBoundary",
+                    assemblyPath,
+                    typeof(Commands.CommandNycLot).FullName)
+                {
+                    ToolTip = "Searches a NYC tax lot by address or BBL, shows every dimension source side by side " +
+                              "(tax-map polygon, legal tax-map dimensions, assessment record) and draws the lot you " +
+                              "choose in context: adjacent lots, block, sidewalk, 3D masses and street names.",
+                    LongDescription =
+                        "The subject lot is drawn as Model Lines with the 'BauTools - Property Line' style and carries " +
+                        "an interop record, so TopoGenerator's 'Align to Lot' can find it. Lot and block geometry come " +
+                        "from DOF's Digital Tax Map; building heights from NYC Building Footprints when a footprint " +
+                        "matches the lot, otherwise an estimate that is labeled as such. Street names are proposed and " +
+                        "must be confirmed before anything is drawn. Needs an internet connection. Version " + Version + "."
+                };
+                ApplyIcon(nycLotButton, assemblyDir, "icon_nyc_lot");
+                sitePanel.AddItem(nycLotButton);
+
+                RibbonPanel panel = application.CreateRibbonPanel(TabName, PanelName);
 
                 var regionAreaButton = new PushButtonData(
                     "ARYE_RegionAreaToParameter",
@@ -101,7 +126,7 @@ namespace ARYE.OfficeTools
     /// Minimal file log in %LOCALAPPDATA%\ARYE\OfficeTools\logs — one file per day. A failure to
     /// write the log is reported to the debugger and never stops the tool.
     /// </summary>
-    public sealed class Log
+    public sealed class Log : ILog
     {
         private readonly string _dir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ARYE", "OfficeTools", "logs");
@@ -109,6 +134,8 @@ namespace ARYE.OfficeTools
         public string Folder => _dir;
 
         public void Info(string message) => Write("INFO ", message);
+
+        public void Warn(string message) => Write("WARN ", message);
 
         public void Error(string message, Exception exception = null) =>
             Write("ERROR", exception == null ? message : message + Environment.NewLine + exception);

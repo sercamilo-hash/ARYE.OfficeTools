@@ -1,0 +1,9 @@
+title: "NYC Lot\nBoundary"
+tooltip: >-
+  Searches a NYC tax lot by address or BBL, shows every dimension source side by side
+  (tax-map polygon, legal tax-map dimensions, assessment record) and draws the lot you
+  choose in context: adjacent lots, block, sidewalk, 3D masses and street names.
+  Needs an internet connection.
+author: ARYE
+assembly: ARYE.OfficeTools
+command_class: ARYE.OfficeTools.Commands.CommandNycLot

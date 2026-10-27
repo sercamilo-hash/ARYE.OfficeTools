@@ -13,7 +13,7 @@
     <RootNamespace>ARYE.OfficeTools</RootNamespace>
     <AssemblyName>ARYE.OfficeTools</AssemblyName>
     <RevitVersion>2026</RevitVersion>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Company>ARYE</Company>
     <Product>ARYE Office Tools</Product>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
