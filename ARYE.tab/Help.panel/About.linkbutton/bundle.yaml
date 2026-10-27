@@ -1,0 +1,6 @@
+title: "About"
+tooltip: >-
+  ARYE Office Tools: version, the BauTools commit these buttons come from, and the log folder.
+author: ARYE
+assembly: ARYE.OfficeTools
+command_class: ARYE.OfficeTools.Commands.AboutCommand

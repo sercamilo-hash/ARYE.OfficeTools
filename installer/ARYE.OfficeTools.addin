@@ -11,6 +11,6 @@
     <!-- Revit identifies the add-in by this GUID: never change it. -->
     <ClientId>cceb640c-0aef-4dc4-9b36-987846ac8af4</ClientId>
     <VendorId>ARYE</VendorId>
-    <VendorDescription>ARYE — NYC Lot Boundary, Region Area and Light &amp; Vent</VendorDescription>
+    <VendorDescription>ARYE — Office Tools (approved BauTools buttons)</VendorDescription>
   </AddIn>
 </RevitAddIns>

@@ -1,15 +1,14 @@
 ARYE Office Tools {VERSION} - for Revit 2026
 ============================================
 
-Three buttons on the ARYE tab:
+Buttons on the ARYE tab:
 
-- NYC Lot Boundary (Site panel): finds a NYC tax lot by address or BBL
-  and draws it in context (adjacent lots, block, sidewalk, 3D masses,
-  street names). Needs an internet connection.
-- Region Area -> Param (Zoning panel): writes the area of Filled Regions into a parameter
-  (for example "Region Area" on the energy elevations).
-- Light & Vent (Zoning panel): adds up the light area and the vent area of each room's
-  exterior windows and writes the two totals to the room.
+- Site: NYC Lot Boundary - finds a NYC tax lot by address or BBL and draws
+  it in context. Needs an internet connection.
+- Levels: Generate Levels, Bubble Heads.
+- Zoning: Zoning Floor Area (the ZR calculation is not yet validated for
+  filing), Region Area -> Param, Light & Vent.
+- Help: About (version and log folder).
 
 INSTALL
 1. Close Revit.
@@ -34,7 +33,7 @@ Windows user only, in %APPDATA%\Autodesk\Revit\Addins\2026\.
 Problems? Send the log in %LOCALAPPDATA%\ARYE\OfficeTools\logs\
 
 WITH pyRevit INSTEAD
-If you use pyRevit, you can install the same three buttons as a pyRevit
+If you use pyRevit, you can install the same buttons as a pyRevit
 extension and update them from pyRevit. Do not use both methods.
 1. Run pyRevit-AddSource.bat once.
 2. In Revit: pyRevit tab > Extensions > ARYEOfficeTools > Install Extension.

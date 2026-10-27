@@ -1,0 +1,376 @@
+<UserControl x:Class="ARYE.OfficeTools.Views.Steps.Step1Buildings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- A UserControl's own InitializeComponent runs before it is attached
+                     to any parent window, so it cannot see MainWindow's merged theme —
+                     each step control merges it independently. -->
+                <ResourceDictionary Source="pack://application:,,,/ARYE.OfficeTools;component/Views/Themes/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+            <!-- From/To/Level selectors: a level owned by another range is
+                 disabled and names its owner, so an overlap can't be picked. -->
+            <Style x:Key="LevelOptionContainer" TargetType="ComboBoxItem">
+                <Setter Property="IsEnabled" Value="{Binding IsAvailable}" />
+            </Style>
+            <DataTemplate x:Key="LevelOptionTemplate">
+                <TextBlock Text="{Binding DisplayText}" />
+            </DataTemplate>
+
+            <Style x:Key="Button.CardIcon" TargetType="Button" BasedOn="{StaticResource Button.Secondary}">
+                <Setter Property="Padding" Value="7,3" />
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Margin" Value="4,0,0,0" />
+            </Style>
+            <Style x:Key="Button.CardDelete" TargetType="Button" BasedOn="{StaticResource Button.Danger}">
+                <Setter Property="Padding" Value="7,3" />
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Margin" Value="4,0,0,0" />
+            </Style>
+
+            <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Secondary}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,0,6,0" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Buildings list -->
+        <Border Grid.Column="0" Style="{StaticResource Card}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Buildings" Style="{StaticResource Text.Header}" Margin="0,0,0,8" />
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                    <TextBlock Text="New building copies" Style="{StaticResource Text.Secondary}" Margin="0,0,0,2" />
+                    <ComboBox ItemsSource="{Binding CopySources}" SelectedItem="{Binding SelectedCopySource}"
+                              DisplayMemberPath="Label" Margin="0,0,0,8"
+                              ToolTip="What the next Add starts from. Pick an existing building to copy its area scheme and every floor range (Single / Typical / Duplex) into the new one — the scope box is left empty because the new building sits somewhere else. '— start blank —' creates an empty building." />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Add" Command="{Binding AddBuildingCommand}" Margin="0,0,8,0"
+                                ToolTip="Add a new building, seeded from the selection above (blank, or a copy of an existing building's area scheme and floor ranges). Each building has its own scope box." />
+                        <Button Content="Remove" Style="{StaticResource Button.Danger}"
+                                Command="{Binding RemoveBuildingCommand}"
+                                ToolTip="Remove the selected building from the configuration. Nothing is deleted in the Revit model." />
+                    </StackPanel>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Buildings}"
+                         SelectedItem="{Binding SelectedBuilding}"
+                         DisplayMemberPath="Name" />
+            </DockPanel>
+        </Border>
+
+        <!-- Selected building editor -->
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto"
+                      DataContext="{Binding SelectedBuilding}">
+            <StackPanel>
+                <TextBlock Text="Select or add a building on the left." Margin="4">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Secondary}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <!-- Identity -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Name" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,16,0"
+                                     ToolTip="Display name of the building, e.g. 'BLDG A'. Used everywhere the tool refers to it — and stamped on propagated areas when a building parameter is set in Step 2." />
+                            <TextBlock Grid.Column="2" Text="Scope box" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ComboBox Grid.Column="3" ItemsSource="{Binding Context.ScopeBoxes}"
+                                      SelectedItem="{Binding ScopeBox}" DisplayMemberPath="Name" Margin="0,0,16,0"
+                                      ToolTip="The scope box framing this building in the model — used to crop its views and sheets." />
+                            <TextBlock Grid.Column="4" Text="Gross area scheme" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <ComboBox Grid.Column="5" ItemsSource="{Binding Context.AreaSchemes}"
+                                      SelectedItem="{Binding AreaScheme}" DisplayMemberPath="Name"
+                                      ToolTip="The area scheme with this building's gross areas. The Sheet Diagrammer, Thermal Boundary and QA read it. The schemes the ZFA is made of (gross plus deductions) are ticked in Step 2 · Sync Ranges; until you tick them, this one is used." />
+                        </Grid>
+                    </Border>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="260" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Floor Ranges -->
+                        <Border Grid.Column="0" Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Floor ranges" Style="{StaticResource Text.Header}" Margin="0,0,0,4" />
+                                <TextBlock Style="{StaticResource Text.Secondary}" TextWrapping="Wrap" Margin="0,0,0,8"
+                                           Text="Each level belongs to at most one range. Levels already taken by another range appear disabled in the selectors." />
+
+                                <ItemsControl ItemsSource="{Binding Ranges}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource Brush.Background}"
+                                                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1"
+                                                    CornerRadius="6" Margin="0,0,0,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="4" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <!-- Range color bar -->
+                                                    <Border Grid.Column="0" Background="{Binding ColorBrush}"
+                                                            CornerRadius="6,0,0,6" />
+
+                                                    <StackPanel Grid.Column="1" Margin="10,8,10,8">
+                                                        <!-- Header row -->
+                                                        <Grid Margin="0,0,0,6">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="140" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Ellipse Grid.Column="0" Width="10" Height="10"
+                                                                     Fill="{Binding ColorBrush}" VerticalAlignment="Center"
+                                                                     Margin="0,0,8,0" />
+                                                            <TextBox Grid.Column="1"
+                                                                     Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                                                     ToolTip="Name of this floor range, e.g. 'Typical L03–L14'. Shown in the Step 2 range selector." />
+                                                            <Border Grid.Column="2" BorderBrush="{Binding ColorBrush}"
+                                                                    BorderThickness="1" CornerRadius="3"
+                                                                    Padding="5,1" Margin="8,0,8,0" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding KindBadge}" FontSize="9"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="{Binding ColorBrush}" />
+                                                            </Border>
+                                                            <TextBlock Grid.Column="3" Text="{Binding SecondaryLabel}"
+                                                                       Style="{StaticResource Text.Secondary}"
+                                                                       VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <StackPanel Grid.Column="4" Orientation="Horizontal">
+                                                                <Button Content="▲" Style="{StaticResource Button.CardIcon}"
+                                                                        Command="{Binding MoveUpCommand}"
+                                                                        ToolTip="Shift the whole range one level up" />
+                                                                <Button Content="▼" Style="{StaticResource Button.CardIcon}"
+                                                                        Command="{Binding MoveDownCommand}"
+                                                                        ToolTip="Shift the whole range one level down" />
+                                                                <Button Content="✕" Style="{StaticResource Button.CardDelete}"
+                                                                        Command="{Binding DeleteCommand}"
+                                                                        ToolTip="Delete this range" />
+                                                            </StackPanel>
+                                                        </Grid>
+
+                                                        <!-- Single Floor fields -->
+                                                        <StackPanel Orientation="Horizontal"
+                                                                    Visibility="{Binding IsSingle, Converter={StaticResource BoolToVis}}">
+                                                            <TextBlock Text="Level" Style="{StaticResource FieldLabel}" />
+                                                            <ComboBox Width="150"
+                                                                      ItemsSource="{Binding LevelOptions}"
+                                                                      SelectedItem="{Binding SelectedLevel}"
+                                                                      ItemContainerStyle="{StaticResource LevelOptionContainer}"
+                                                                      ItemTemplate="{StaticResource LevelOptionTemplate}"
+                                                                      ToolTip="The one hand-authored level of this Single Floor. It is never a propagation source or target." />
+                                                        </StackPanel>
+
+                                                        <!-- Typical Range fields -->
+                                                        <StackPanel Orientation="Horizontal"
+                                                                    Visibility="{Binding IsTypical, Converter={StaticResource BoolToVis}}">
+                                                            <TextBlock Text="From" Style="{StaticResource FieldLabel}" />
+                                                            <ComboBox Width="110" Margin="0,0,12,0"
+                                                                      ItemsSource="{Binding FromOptions}"
+                                                                      SelectedItem="{Binding SelectedFrom}"
+                                                                      ItemContainerStyle="{StaticResource LevelOptionContainer}"
+                                                                      ItemTemplate="{StaticResource LevelOptionTemplate}"
+                                                                      ToolTip="Lowest level of the range. Levels owned by another range are disabled — a level belongs to at most one range." />
+                                                            <TextBlock Text="To" Style="{StaticResource FieldLabel}" />
+                                                            <ComboBox Width="110" Margin="0,0,12,0"
+                                                                      ItemsSource="{Binding ToOptions}"
+                                                                      SelectedItem="{Binding SelectedTo}"
+                                                                      ItemContainerStyle="{StaticResource LevelOptionContainer}"
+                                                                      ItemTemplate="{StaticResource LevelOptionTemplate}"
+                                                                      ToolTip="Highest level of the range. Levels owned by another range are disabled — a level belongs to at most one range." />
+                                                            <TextBlock Text="Source" Style="{StaticResource FieldLabel}" />
+                                                            <ComboBox Width="110"
+                                                                      ItemsSource="{Binding SourceOptions}"
+                                                                      SelectedItem="{Binding SelectedSource}"
+                                                                      DisplayMemberPath="Name"
+                                                                      ToolTip="The level whose areas replicate onto the rest of the range" />
+                                                        </StackPanel>
+
+                                                        <!-- Duplex Range fields -->
+                                                        <StackPanel Visibility="{Binding IsDuplex, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="From" Style="{StaticResource FieldLabel}" />
+                                                                <ComboBox Width="110" Margin="0,0,12,0"
+                                                                          ItemsSource="{Binding FromOptions}"
+                                                                          SelectedItem="{Binding SelectedFrom}"
+                                                                          ItemContainerStyle="{StaticResource LevelOptionContainer}"
+                                                                          ItemTemplate="{StaticResource LevelOptionTemplate}"
+                                                                          ToolTip="Lowest level of the duplex range. Pairs are generated bottom-up two-by-two from here." />
+                                                                <TextBlock Text="To" Style="{StaticResource FieldLabel}" />
+                                                                <ComboBox Width="110" Margin="0,0,12,0"
+                                                                          ItemsSource="{Binding ToOptions}"
+                                                                          SelectedItem="{Binding SelectedTo}"
+                                                                          ItemContainerStyle="{StaticResource LevelOptionContainer}"
+                                                                          ItemTemplate="{StaticResource LevelOptionTemplate}"
+                                                                          ToolTip="Highest level of the duplex range. An odd level count leaves the top level unpaired — flagged, never blocked." />
+                                                                <TextBlock Text="Source pair" Style="{StaticResource FieldLabel}" />
+                                                                <ComboBox Width="130"
+                                                                          ItemsSource="{Binding PairOptions}"
+                                                                          SelectedItem="{Binding SelectedSourcePair}"
+                                                                          DisplayMemberPath="Display"
+                                                                          ToolTip="The pair whose areas replicate onto every other pair" />
+                                                            </StackPanel>
+                                                            <TextBlock Text="{Binding PairsSummary}"
+                                                                       Style="{StaticResource Text.Secondary}"
+                                                                       TextWrapping="Wrap" Margin="0,6,0,0" />
+                                                        </StackPanel>
+
+                                                        <!-- Odd-count duplex warning (warning, never a blocker) -->
+                                                        <Border Background="#1FB45309" BorderBrush="{StaticResource Brush.Warning}"
+                                                                BorderThickness="1" CornerRadius="3" Padding="6,4" Margin="0,6,0,0"
+                                                                Visibility="{Binding HasOddWarning, Converter={StaticResource BoolToVis}}">
+                                                            <TextBlock Text="{Binding OddWarning}" TextWrapping="Wrap"
+                                                                       FontSize="11" Foreground="{StaticResource Brush.Warning}" />
+                                                        </Border>
+
+                                                        <!-- Legacy non-contiguous checkbox-era save -->
+                                                        <Border Background="#1FB45309" BorderBrush="{StaticResource Brush.Warning}"
+                                                                BorderThickness="1" CornerRadius="3" Padding="6,4" Margin="0,6,0,0"
+                                                                Visibility="{Binding IsLegacyNonContiguous, Converter={StaticResource BoolToVis}}">
+                                                            <TextBlock Text="{Binding LegacyWarning}" TextWrapping="Wrap"
+                                                                       FontSize="11" Foreground="{StaticResource Brush.Warning}" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Add buttons: new ranges take the lowest available level(s);
+                                     disabled when every level is already owned. -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
+                                    <Button Content="+ Single Floor" Style="{StaticResource Button.Secondary}"
+                                            Command="{Binding AddSingleCommand}" Margin="0,0,8,0"
+                                            ToolTip="Add a hand-authored floor: one level that never propagates and is never a propagation target. Disabled when every level is already owned by a range." />
+                                    <Button Content="+ Typical Range" Style="{StaticResource Button.Secondary}"
+                                            Command="{Binding AddTypicalCommand}" Margin="0,0,8,0"
+                                            ToolTip="Add a contiguous From–To range whose source level replicates onto every other level of the range. Disabled when every level is already owned by a range." />
+                                    <Button Content="+ Duplex Range" Style="{StaticResource Button.Secondary}"
+                                            Command="{Binding AddDuplexCommand}"
+                                            ToolTip="Add a range of two-level units, paired bottom-up. The source pair replicates onto every other pair (lower onto lowers, upper onto uppers). Disabled when every level is already owned by a range." />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Level diagram: preview panel, always on the right by convention.
+                             Stacked colored bands, top-down by elevation — one band per level,
+                             colored by whichever range covers it. -->
+                        <Border Grid.Column="2" Style="{StaticResource Card}">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="Level diagram" Style="{StaticResource Text.Header}" Margin="0,0,0,4" />
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Background="#1F059669" CornerRadius="3" Padding="6,2" Margin="0,0,6,0">
+                                        <TextBlock FontSize="11" Foreground="{StaticResource Brush.Confirm}"><Run Text="{Binding AssignedCount, Mode=OneWay}" /><Run Text=" assigned" /></TextBlock>
+                                    </Border>
+                                    <Border Background="#1FB45309" CornerRadius="3" Padding="6,2"
+                                            Visibility="{Binding HasUnassigned, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock FontSize="11" Foreground="{StaticResource Brush.Warning}"><Run Text="{Binding UnassignedCount, Mode=OneWay}" /><Run Text=" unassigned" /></TextBlock>
+                                    </Border>
+                                </StackPanel>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding LevelRangePreview}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,1">
+                                                    <Border Background="{Binding RowBackground}" CornerRadius="3" Padding="4,4">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="6" />
+                                                                <ColumnDefinition Width="52" />
+                                                                <ColumnDefinition Width="52" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Rectangle Grid.Column="0" Width="6" Fill="{Binding ColorBrush}"
+                                                                       RadiusX="2" RadiusY="2" Margin="0,0,6,0" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding LevelName}" FontSize="11"
+                                                                       FontWeight="SemiBold" VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Grid.Column="2" Text="{Binding ElevationLabel}" FontSize="10"
+                                                                       Style="{StaticResource Text.Secondary}" VerticalAlignment="Center" />
+                                                            <TextBlock Grid.Column="3" Text="{Binding Label}" FontSize="11"
+                                                                       Style="{StaticResource Text.Secondary}" VerticalAlignment="Center"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <StackPanel Grid.Column="4" Orientation="Horizontal">
+                                                                <!-- Pair chip: outlined in range color -->
+                                                                <Border BorderBrush="{Binding ColorBrush}" BorderThickness="1"
+                                                                        CornerRadius="3" Padding="4,0" Margin="4,0,0,0"
+                                                                        VerticalAlignment="Center"
+                                                                        Visibility="{Binding ShowPairChip, Converter={StaticResource BoolToVis}}">
+                                                                    <TextBlock Text="{Binding PairChipText}" FontSize="9"
+                                                                               FontWeight="SemiBold" Foreground="{Binding ColorBrush}" />
+                                                                </Border>
+                                                                <!-- SRC chip: white text on range color -->
+                                                                <Border Background="{Binding ColorBrush}" CornerRadius="3"
+                                                                        Padding="4,0" Margin="4,0,0,0" VerticalAlignment="Center"
+                                                                        Visibility="{Binding ShowSourceChip, Converter={StaticResource BoolToVis}}">
+                                                                    <TextBlock Text="SRC" FontSize="9" FontWeight="SemiBold"
+                                                                               Foreground="{StaticResource Brush.OnAccent}" />
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                    <!-- Unassigned: gray dashed outline -->
+                                                    <Rectangle Stroke="#94A3B8" StrokeThickness="1" StrokeDashArray="3 2"
+                                                               RadiusX="3" RadiusY="3"
+                                                               Visibility="{Binding IsUnassigned, Converter={StaticResource BoolToVis}}" />
+                                                    <!-- Unpaired duplex level: warning outline -->
+                                                    <Rectangle Stroke="{StaticResource Brush.Warning}" StrokeThickness="1"
+                                                               RadiusX="3" RadiusY="3"
+                                                               Visibility="{Binding IsWarning, Converter={StaticResource BoolToVis}}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

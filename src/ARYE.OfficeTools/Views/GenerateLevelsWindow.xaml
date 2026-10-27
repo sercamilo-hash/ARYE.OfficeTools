@@ -1,0 +1,141 @@
+<Window x:Class="ARYE.OfficeTools.Views.GenerateLevelsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BauTools — Generate Levels"
+        Width="640" Height="520" MinWidth="560" MinHeight="440"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Brush.Background}">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Absolute pack URI: inside Revit, relative URIs resolve against
+                     Revit.exe (the host app), not this assembly, and the load fails. -->
+                <ResourceDictionary Source="pack://application:,,,/ARYE.OfficeTools;component/Views/Themes/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="8" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Generate levels"
+                   Style="{StaticResource Text.Header}" Margin="0,0,0,4" />
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Style="{StaticResource Text.Secondary}"
+                   TextWrapping="Wrap" Margin="0,22,0,8"
+                   Text="Creates a run of evenly-spaced levels from a base elevation and a typical floor-to-floor height. Levels that would collide with one already in the model — by name or by elevation — are skipped, never overwritten." />
+
+        <!-- Inputs -->
+        <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Base elevation (ft)" Style="{StaticResource Text.Secondary}" Margin="0,0,0,2" />
+                <TextBox Text="{Binding BaseElevationFt, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"
+                         ToolTip="Elevation of the first level in feet, in the project's internal coordinates. Every following level adds one floor-to-floor height on top of it." />
+
+                <TextBlock Text="Number of levels" Style="{StaticResource Text.Secondary}" Margin="0,0,0,2" />
+                <TextBox Text="{Binding Count, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"
+                         ToolTip="How many levels the run plans, base level included. Levels that collide with an existing one are listed as skipped and reduce what is actually created." />
+
+                <TextBlock Text="Typical floor-to-floor height (ft)" Style="{StaticResource Text.Secondary}" Margin="0,0,0,2" />
+                <TextBox Text="{Binding TypicalHeightFt, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"
+                         ToolTip="Vertical distance in feet between consecutive levels. Must be positive; the same value is used for the whole run." />
+
+                <TextBlock Text="Name prefix" Style="{StaticResource Text.Secondary}" Margin="0,0,0,2" />
+                <TextBox Text="{Binding NamePrefix, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"
+                         ToolTip="Text placed before the number in every level name, e.g. 'L' gives L01, L02… Names are compared case-insensitively against the model." />
+
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Start number" Style="{StaticResource Text.Secondary}" Margin="0,0,0,2" />
+                        <TextBox Text="{Binding StartNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Number given to the first level; each following level counts up by one. Use 1 for L01 upwards, or 2 when the ground floor already exists." />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Digits" Style="{StaticResource Text.Secondary}" Margin="0,0,0,2" />
+                        <TextBox Text="{Binding NamePadding, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Minimum number of digits, zero-padded: 2 gives L01…L99, 3 gives L001. Keeps level names sorting correctly in the Project Browser." />
+                    </StackPanel>
+                </Grid>
+
+                <CheckBox Content="Also create a Floor Plan view per level"
+                          IsChecked="{Binding CreateViews}" Margin="0,4,0,0"
+                          ToolTip="When checked, one Floor Plan view is created for each new level, using the model's first Floor Plan view type. Skipped levels get no view." />
+            </StackPanel>
+        </Border>
+
+        <!-- Preview: always on the right — this is the tool's preview panel. -->
+        <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="Preview" Style="{StaticResource Text.Header}" />
+                    <!-- ⓘ hint: the collision rules the preview applies. -->
+                    <TextBlock Text="ⓘ" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Cursor="Help"
+                               Style="{StaticResource Text.Secondary}"
+                               ToolTipService.ShowDuration="20000"
+                               ToolTip="Every planned level is checked against the levels already in the model before anything is created. A level is skipped, never overwritten, when its name matches an existing level (case-insensitive: 'l05' collides with 'L05') or when its elevation is within 0.01 ft of an existing level. Skipped rows are tinted red and say which existing level they collide with." />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Top" Text="{Binding StatusText}" Style="{StaticResource Text.Secondary}"
+                           TextWrapping="Wrap" Margin="0,0,0,8"
+                           ToolTip="Summary of the plan: how many levels will be created and how many are skipped because they collide with an existing level." />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding PreviewRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="3" Margin="0,1" Padding="6,4">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                                                    <Setter Property="Background" Value="#1ADC2626" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="60" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="11"
+                                                   FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="{Binding ElevationLabel}" FontSize="10"
+                                                   Style="{StaticResource Text.Secondary}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="11"
+                                                   Style="{StaticResource Text.Secondary}" VerticalAlignment="Center"
+                                                   TextWrapping="Wrap" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Cancel" Style="{StaticResource Button.Secondary}"
+                    Click="OnCancelClick" Margin="0,0,8,0"
+                    ToolTip="Close without creating anything. The model is not touched." />
+            <Button Content="Generate" Command="{Binding GenerateCommand}"
+                    ToolTipService.ShowOnDisabled="True"
+                    ToolTip="Create exactly the levels listed as 'Will create' in the preview, in one undoable transaction. Skipped levels are left alone. Disabled while the preview has nothing to create." />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,6 @@
+title: "Zoning\nFloor Area"
+tooltip: >-
+  Multi-building ZFA workflow: buildings and typical floor ranges, Sync Ranges, and the NYC deductions matrix. The ZR calculation is not yet validated against an approved filing: check every number before using it in a filing.
+author: ARYE
+assembly: ARYE.OfficeTools
+command_class: ARYE.OfficeTools.Commands.ZfaCommand

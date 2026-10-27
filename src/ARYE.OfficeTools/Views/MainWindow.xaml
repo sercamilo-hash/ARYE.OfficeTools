@@ -1,0 +1,81 @@
+<Window x:Class="ARYE.OfficeTools.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:steps="clr-namespace:ARYE.OfficeTools.Views.Steps"
+        Title="BauTools — Zoning Floor Area"
+        Width="1100" Height="760"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource Brush.Background}">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Absolute pack URI: inside Revit, relative URIs resolve against
+                     Revit.exe (the host app), not this assembly, and the load fails. -->
+                <ResourceDictionary Source="pack://application:,,,/ARYE.OfficeTools;component/Views/Themes/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource Brush.Card}"
+                BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1" Padding="16,10">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left" Style="{StaticResource Text.Header}"
+                           Text="Zoning Floor Area" VerticalAlignment="Center" />
+                <TextBlock DockPanel.Dock="Left" Margin="12,0,0,0" VerticalAlignment="Center"
+                           Style="{StaticResource Text.Secondary}"
+                           Text="{Binding DocumentTitle}" />
+                <!-- Shown until the ZR engine is validated against an approved ARYE case (ROADMAP B5). -->
+                <Border DockPanel.Dock="Left" Margin="16,0,0,0" VerticalAlignment="Center"
+                        Background="{StaticResource Brush.Warning}" CornerRadius="3" Padding="8,2"
+                        ToolTip="The Zoning Floor Area calculation has not yet been validated against an approved ARYE filing. Check every number against the zoning resolution before using it in a filing.">
+                    <TextBlock Text="ZR calculation not validated — not for filing"
+                               Foreground="{StaticResource Brush.OnAccent}" FontWeight="SemiBold" />
+                </Border>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Refresh" Style="{StaticResource Button.Secondary}"
+                            Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
+                    <Button Content="Save Configuration" Style="{StaticResource Button.Confirm}"
+                            Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Steps -->
+        <TabControl x:Name="Steps" Grid.Row="1" Margin="8" SelectionChanged="OnStepChanged">
+            <TabItem Header="1 · Buildings &amp; Floor Groups">
+                <steps:Step1Buildings DataContext="{Binding Buildings}" />
+            </TabItem>
+            <TabItem x:Name="SyncTab" Header="2 · Sync Ranges"
+                     ToolTip="Make every Typical and Duplex range a copy of its source level, and check that it still is.">
+                <steps:Step2AreaMapping DataContext="{Binding AreaMapping}" />
+            </TabItem>
+            <TabItem Header="3 · ZFA Matrix">
+                <steps:Step3Matrix DataContext="{Binding ZoningMatrix}" />
+            </TabItem>
+            <TabItem Header="4 · Sheets →" IsEnabled="False"
+                     ToolTipService.ShowOnDisabled="True"
+                     ToolTip="Sheet generation moved to its own button: BauTools › 4 · Sheets › Sheet Diagrammer. It reads the buildings and typical floors defined here." />
+        </TabControl>
+
+        <!-- Status bar -->
+        <Border Grid.Row="2" Background="{StaticResource Brush.Card}"
+                BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0" Padding="16,6">
+            <DockPanel>
+                <ProgressBar DockPanel.Dock="Right" Width="120" Height="6" IsIndeterminate="True"
+                             Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock Style="{StaticResource Text.Secondary}" Text="{Binding StatusText}" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,335 @@
+<UserControl x:Class="ARYE.OfficeTools.Views.Steps.Step3Matrix"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Absolute pack URI: inside Revit, relative URIs resolve against
+                     Revit.exe (the host app), not this assembly, and the load fails. -->
+                <ResourceDictionary Source="pack://application:,,,/ARYE.OfficeTools;component/Views/Themes/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+            <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Secondary}">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,0,6,0" />
+            </Style>
+
+            <!-- ⓘ hint next to a panel header; the ToolTip carries the long explanation. -->
+            <Style x:Key="HintGlyph" TargetType="TextBlock" BasedOn="{StaticResource Text.Secondary}">
+                <Setter Property="Text" Value="ⓘ" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Margin" Value="6,0,0,0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Cursor" Value="Help" />
+                <Setter Property="ToolTipService.ShowDuration" Value="20000" />
+            </Style>
+
+            <!-- Slim gauge bar used by the FAR gauge and the right-panel bar charts. -->
+            <Style x:Key="GaugeBar" TargetType="ProgressBar">
+                <Setter Property="Minimum" Value="0" />
+                <Setter Property="Maximum" Value="1" />
+                <Setter Property="Background" Value="{StaticResource Brush.Border}" />
+                <Setter Property="BorderThickness" Value="0" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ── Topbar: zoning lot inputs, energy toggle, actions ──────────── -->
+        <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,8">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Lot area (sf)" Style="{StaticResource FieldLabel}" />
+                    <TextBox Width="100" Margin="0,0,14,0"
+                             Text="{Binding LotAreaSqFt, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Area of the zoning lot in square feet. Allowed ZFA = lot area × max FAR." />
+                    <TextBlock Text="Max FAR" Style="{StaticResource FieldLabel}" />
+                    <TextBox Width="70" Margin="0,0,14,0"
+                             Text="{Binding MaxFar, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Maximum floor area ratio of the district. Allowed ZFA = lot area × max FAR." />
+                    <TextBlock Text="District" Style="{StaticResource FieldLabel}" />
+                    <TextBox Width="90" Margin="0,0,18,0"
+                             Text="{Binding District, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Zoning district label (e.g. R7-2, C4-4D). Informational — printed on exports." />
+
+                    <CheckBox Content="Energy deduction" VerticalAlignment="Center" Margin="0,0,6,0"
+                              IsChecked="{Binding EnergyEnabled}"
+                              ToolTip="When on, ENERGY = the percentage at the right × NET is taken off each level before ZFA. When off, the ENERGY column is hidden — on screen and in the XLSX — and ZFA equals NET. Stored with the project configuration." />
+                    <TextBox Width="44" Margin="0,0,2,0"
+                             Text="{Binding EnergyPercent, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Energy deduction as a percentage of NET (office default 5). Applied only while the checkbox is on." />
+                    <TextBlock Text="% of NET" Style="{StaticResource FieldLabel}" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="Categories…" Style="{StaticResource Button.Secondary}" Margin="0,0,8,0"
+                            Command="{Binding EditCategoriesCommand}"
+                            ToolTip="Edit the project's ZFA category list: add, rename, delete or change a category's role (Main Gross / Commercial Gross / Deduction / Exempt). The list drives the matrix columns, the harvest matching and the Step 2 filter." />
+                    <Button Content="Compute Matrix" Command="{Binding ComputeCommand}" Margin="0,0,8,0"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Read every Area of each building's scheme, match its 'ZFA Category' against the category list and rebuild the matrix. Also ensures the parameter exists on Areas." />
+                    <Button Content="Export XLSX" Style="{StaticResource Button.Secondary}" Margin="0,0,8,0"
+                            Command="{Binding ExportXlsxCommand}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Write a real Excel workbook with LIVE formulas (NET, ENERGY, ZFA, TOTALS) mirroring the office sheet. Compute the matrix first." />
+                    <Button Content="Export CSV" Style="{StaticResource Button.Secondary}" Margin="0,0,8,0"
+                            Command="{Binding ExportCsvCommand}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Write the matrix as plain CSV values (Excel-compatible). Compute the matrix first." />
+                    <Button Content="⟳ Drafting View" Style="{StaticResource Button.Confirm}"
+                            Command="{Binding DraftingViewCommand}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Draw or update the 'ZFA MATRIX — BauTools' drafting view (3/32&quot; text). Updates in place: only plugin-drawn elements are replaced, your own annotations survive, and a placed viewport stays placed." />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Unclassified banner (amber) ────────────────────────────────── -->
+        <Border Grid.Row="1" Margin="0,0,0,8" CornerRadius="6" Padding="12"
+                Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1"
+                Visibility="{Binding HasUnclassified, Converter={StaticResource BoolToVis}}">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                        <TextBlock Text="{Binding UnclassifiedBannerText}" FontSize="14"
+                                   FontWeight="SemiBold" Foreground="#92400E" VerticalAlignment="Center" />
+                        <TextBlock Style="{StaticResource HintGlyph}" Foreground="#92400E"
+                                   ToolTip="These areas carry no (or an unknown) 'ZFA Category' value. They are counted into GROSS FLOOR AREA so nothing disappears, but the totals are not final until every area is classified. Pick a category per area and press Apply classifications." />
+                    </StackPanel>
+                    <Button DockPanel.Dock="Right" HorizontalAlignment="Right" Content="Apply classifications"
+                            Style="{StaticResource Button.Confirm}"
+                            Command="{Binding ApplyClassificationsCommand}"
+                            ToolTipService.ShowOnDisabled="True"
+                            ToolTip="Write the chosen category into each area's 'ZFA Category' parameter, then recompute the matrix. Enabled once at least one area has a category picked." />
+                </DockPanel>
+                <DataGrid ItemsSource="{Binding Unclassified}" MaxHeight="170"
+                          ToolTip="Every area the harvest could not classify — the combo lists the project's category names.">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Building" Binding="{Binding Building}" IsReadOnly="True" Width="110" />
+                        <DataGridTextColumn Header="Level" Binding="{Binding Level}" IsReadOnly="True" Width="90" />
+                        <DataGridTextColumn Header="Area" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
+                        <DataGridTextColumn Header="sf" Binding="{Binding SquareFeet, StringFormat=N0}" IsReadOnly="True" Width="80" />
+                        <DataGridTemplateColumn Header="ZFA Category" Width="180">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ComboBox ItemsSource="{Binding Categories}"
+                                              SelectedItem="{Binding SelectedCategory, UpdateSourceTrigger=PropertyChanged}"
+                                              ToolTip="Category to write into this area's 'ZFA Category' parameter — the names come from the project's configurable list (Categories…)." />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+
+        <!-- ── Problems (harvest report — nothing is dropped silently) ────── -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,0,0,8"
+                Visibility="{Binding HasProblems, Converter={StaticResource BoolToVis}}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="Harvest report" Style="{StaticResource Text.Header}"
+                               Foreground="{StaticResource Brush.Warning}" />
+                    <TextBlock Style="{StaticResource HintGlyph}"
+                               ToolTip="Everything the harvest skipped or found suspicious: unplaced or unenclosed areas, unknown category values, suspected duplex double-counts. Fix them in the model and recompute." />
+                </StackPanel>
+                <ScrollViewer MaxHeight="100" VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding ProblemsText}" TextWrapping="Wrap"
+                               Foreground="{StaticResource Brush.Warning}" FontSize="12"
+                               ToolTip="Reported problems — none of these were dropped silently." />
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- ── Matrix table + right panel ─────────────────────────────────── -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="280" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Matrix -->
+            <Border Grid.Column="0" Style="{StaticResource Card}">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
+                        <TextBlock Text="ZFA matrix" Style="{StaticResource Text.Header}" />
+                        <TextBlock Style="{StaticResource HintGlyph}"
+                                   ToolTip="One row per level, grouped per building with a TOTALS row each and a grand-total row at the end. Columns follow the office sheet: GROSS | COMMERCIAL GROSS | one column per deduction category, grouped under a DEDUCTIONS band | NET | ENERGY (pale yellow, shown only while the energy toggle is on) | ZFA. Blank cells mean no area of that kind — like the office sheet, never 0.00. The color dot links each level to its Step 1 range." />
+                    </StackPanel>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Upper header row: the DEDUCTIONS group band. WPF's DataGrid has
+                             no grouped headers, so this strip sits above the grid and the
+                             code-behind keeps its three segments exactly as wide as the
+                             columns beneath (left block / deductions / right block) and
+                             slides it with the grid's horizontal scroll. The left and right
+                             segments have no bottom border, so LEVEL, GROSS, NET… read as
+                             cells merged across both header rows — like the office Excel. -->
+                        <Border x:Name="HeaderBand" Grid.Row="0" Visibility="Collapsed" ClipToBounds="True"
+                                Background="{StaticResource Brush.Card}"
+                                BorderBrush="{StaticResource Brush.Border}" BorderThickness="1,1,1,0"
+                                ToolTip="Group header, as in the office Excel: every column beneath DEDUCTIONS is a deduction category subtracted from GROSS FLOOR AREA to reach NET FLOOR AREA. Edit the categories under Categories…">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                <StackPanel.RenderTransform>
+                                    <TranslateTransform x:Name="BandScroll" />
+                                </StackPanel.RenderTransform>
+                                <Border x:Name="LeftBand" Width="0"
+                                        BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,1,0" />
+                                <Border x:Name="DeductionBand" Width="0" Padding="4,5" ClipToBounds="True"
+                                        BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,1,1">
+                                    <TextBlock Text="DEDUCTIONS" FontWeight="SemiBold" FontFamily="Segoe UI"
+                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                </Border>
+                                <Border x:Name="RightBand" Width="0" />
+                            </StackPanel>
+                        </Border>
+
+                        <DataGrid x:Name="MatrixGrid" Grid.Row="1" IsReadOnly="True"
+                                  ItemsSource="{Binding Rows}"
+                                  AlternatingRowBackground="{x:Null}"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  ToolTip="The computed ZFA matrix. Press Compute Matrix to refresh it from the model.">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="{Binding RowBackground}" />
+                                    <Setter Property="FontWeight" Value="{Binding RowFontWeight}" />
+                                    <Setter Property="ToolTip" Value="{Binding RowToolTip}" />
+                                </Style>
+                            </DataGrid.RowStyle>
+                        </DataGrid>
+                    </Grid>
+                </DockPanel>
+            </Border>
+
+            <!-- Right panel: FAR gauge & charts -->
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="FAR gauge" Style="{StaticResource Text.Header}" />
+                            <TextBlock Style="{StaticResource HintGlyph}"
+                                       ToolTip="Computed zoning floor area against the allowance (lot area × max FAR). Green while under FAR, red when over. Recomputes live when you change the lot inputs or the energy toggle." />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding BigZfaText}" FontSize="24" FontWeight="Bold"
+                                   ToolTip="Total zoning floor area across all buildings." />
+                        <TextBlock Text="{Binding AllowedLineText}" Style="{StaticResource Text.Secondary}"
+                                   Margin="0,0,0,8"
+                                   ToolTip="The allowance: lot area × max FAR from the topbar." />
+
+                        <ProgressBar Style="{StaticResource GaugeBar}" Height="14"
+                                     Value="{Binding FarFraction, Mode=OneWay}"
+                                     Foreground="{Binding GaugeBrush}"
+                                     ToolTip="Share of the allowed ZFA already used. The fill turns red when the project is over FAR." />
+
+                        <Grid Margin="0,6,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0"
+                                        ToolTip="FAR actually consumed: ZFA ÷ lot area.">
+                                <TextBlock Text="FAR used" Style="{StaticResource Text.Secondary}" />
+                                <TextBlock Text="{Binding FarUsedText}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        ToolTip="Allowed ZFA minus computed ZFA. Negative means over FAR.">
+                                <TextBlock Text="Remaining" Style="{StaticResource Text.Secondary}" />
+                                <TextBlock Text="{Binding RemainingText}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2"
+                                        ToolTip="Maximum FAR entered in the topbar.">
+                                <TextBlock Text="Max" Style="{StaticResource Text.Secondary}" />
+                                <TextBlock Text="{Binding MaxFarText}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border CornerRadius="4" Padding="8,5" Margin="0,0,0,12"
+                                Background="{Binding FarChipBackground}"
+                                Visibility="{Binding HasFarChip, Converter={StaticResource BoolToVis}}"
+                                ToolTip="The FAR verdict: green while the computed ZFA fits the allowance, red once it exceeds it.">
+                            <TextBlock Text="{Binding FarChipText}" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Brush.OnAccent}" TextWrapping="Wrap" />
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <TextBlock Text="ZFA by building" FontWeight="SemiBold" FontSize="12" />
+                            <TextBlock Style="{StaticResource HintGlyph}"
+                                       ToolTip="Each building's ZFA contribution. Bars are relative to the largest building." />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding BuildingBars}" Margin="0,0,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2" ToolTip="{Binding ValueText}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="11"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        <ProgressBar Grid.Column="1" Style="{StaticResource GaugeBar}" Height="10"
+                                                     Value="{Binding Fraction, Mode=OneWay}"
+                                                     Foreground="{Binding Brush}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="{Binding ValueText}" FontSize="11"
+                                                   Style="{StaticResource Text.Secondary}" Margin="6,0,0,0"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <TextBlock Text="Deductions by category" FontWeight="SemiBold" FontSize="12" />
+                            <TextBlock Style="{StaticResource HintGlyph}"
+                                       ToolTip="Total square feet deducted per category across all buildings. Bars are relative to the largest deduction; categories with nothing deducted are hidden." />
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding DeductionBars}" Margin="0,0,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2" ToolTip="{Binding ValueText}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="11"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        <ProgressBar Grid.Column="1" Style="{StaticResource GaugeBar}" Height="10"
+                                                     Value="{Binding Fraction, Mode=OneWay}"
+                                                     Foreground="{Binding Brush}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="{Binding ValueText}" FontSize="11"
+                                                   Style="{StaticResource Text.Secondary}" Margin="6,0,0,0"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="{Binding LastComputedText}" Style="{StaticResource Text.Secondary}"
+                                   TextWrapping="Wrap"
+                                   ToolTip="When and by whom the matrix was last computed. Stored with the project, so it survives closing the file." />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -63,6 +63,6 @@ if (-not (Test-Path $dll)) {
 $version = (Get-Item $dll).VersionInfo.ProductVersion -replace '\+.*$', ''
 Write-Host "[OK] Installed version $version in $addins" -ForegroundColor Green
 Write-Host ''
-Write-Host 'Open Revit 2026, ARYE tab: "NYC Lot Boundary" (Site panel), "Region Area -> Param" and "Light & Vent" (Zoning panel).'
+Write-Host 'Open Revit 2026 and go to the ARYE tab: Site, Levels, Zoning and Help panels.'
 Write-Host 'The first time, Revit may ask whether to load the add-in: choose "Always Load".'
 exit 0
