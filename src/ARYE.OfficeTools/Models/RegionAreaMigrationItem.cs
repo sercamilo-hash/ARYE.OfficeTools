@@ -97,8 +97,8 @@ namespace ARYE.OfficeTools.Models
             {
                 switch (_status)
                 {
-                    case MigrationStatus.New: return "NEW";
-                    case MigrationStatus.Overwrite: return "OVERWRITE";
+                    case MigrationStatus.New: return NeedsGroupVary ? "NEW · IN GROUP" : "NEW";
+                    case MigrationStatus.Overwrite: return NeedsGroupVary ? "OVERWRITE · IN GROUP" : "OVERWRITE";
                     case MigrationStatus.NoChange: return "NO CHANGE";
                     case MigrationStatus.MissingParameter: return "NO PARAM";
                     case MigrationStatus.ReadOnlyParameter: return "READ-ONLY";
@@ -107,6 +107,18 @@ namespace ARYE.OfficeTools.Models
                     default: return "—";
                 }
             }
+        }
+
+        private bool _needsGroupVary;
+
+        /// <summary>
+        /// Inside a group, and the target parameter does not vary by group instance: writable only
+        /// once Apply switches the parameter to vary by group instance.
+        /// </summary>
+        public bool NeedsGroupVary
+        {
+            get { return _needsGroupVary; }
+            set { _needsGroupVary = value; Raise("NeedsGroupVary"); Raise("StatusText"); }
         }
 
         public bool IsWritable

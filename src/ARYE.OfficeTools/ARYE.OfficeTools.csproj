@@ -15,7 +15,7 @@
     <RevitVersion>2026</RevitVersion>
     <!-- Same constants BauTools defines for Revit 2026, so promoted code compiles unchanged. -->
     <DefineConstants>$(DefineConstants);REVIT2026;REVIT2024_OR_GREATER;REVIT2025_OR_GREATER;REVIT2026_OR_GREATER</DefineConstants>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <Company>ARYE</Company>
     <Product>ARYE Office Tools</Product>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>

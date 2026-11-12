@@ -2,9 +2,9 @@
 
 Written by `build/promote.py`. Every file under `src/` and `tests/` except `App.cs`, `Commands/AboutCommand.cs` and the project files is a copy from BauTools: change it there.
 
-- **BauTools commit:** `5cac160425b9d8b719a4f11e9c61f0360325e94b` (origin/main)
-- **Promoted on:** 2026-10-27
-- **Files:** 145 · **test files:** 24 · Passed!  - Failed:     0, Passed:   201, Skipped:     0, Total:   201, Duration: 60 ms - ARYE.OfficeTools.Tests.dll (net8.0)
+- **BauTools commit:** `1e79c6ee97e5614ac6fa17b0397cea2d3df5567d` (origin/main)
+- **Promoted on:** 2026-11-12
+- **Files:** 148 · **test files:** 24 · Passed!  - Failed:     0, Passed:   201, Skipped:     0, Total:   201, Duration: 62 ms - ARYE.OfficeTools.Tests.dll (net8.0)
 
 | Panel | Button | Command |
 |---|---|---|

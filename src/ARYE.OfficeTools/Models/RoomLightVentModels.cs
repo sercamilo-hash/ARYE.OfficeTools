@@ -26,6 +26,9 @@ namespace ARYE.OfficeTools.Models
 
         public string SpecLabel { get; set; }
 
+        /// <summary>Revit parameter group as the Properties palette shows it ("Data", "Identity Data"...).</summary>
+        public string GroupLabel { get; set; } = string.Empty;
+
         public bool IsShared { get; set; }
 
         public Guid SharedGuid { get; set; }
@@ -171,6 +174,9 @@ namespace ARYE.OfficeTools.Models
 
         public bool CanWriteVent { get; set; }
 
+        /// <summary>Will change, but is in a group whose target parameter does not vary by group instance.</summary>
+        public bool NeedsGroupVary { get; set; }
+
         public RoomTotals Totals { get; set; }
 
         public List<LightVentWindowRow> Windows { get; set; } = new List<LightVentWindowRow>();
@@ -214,5 +220,10 @@ namespace ARYE.OfficeTools.Models
         public List<string> FamiliesMissingLight { get; set; } = new List<string>();
 
         public List<string> FamiliesMissingVent { get; set; } = new List<string>();
+
+        /// <summary>Target parameters to switch to "vary by group instance" so rooms in groups can be written.</summary>
+        public List<GroupVaryHelper.Need> GroupVaryNeeds { get; set; } = new List<GroupVaryHelper.Need>();
+
+        public int RoomsNeedingGroupVary => Rooms.Count(r => r.NeedsGroupVary);
     }
 }

@@ -335,7 +335,9 @@ namespace ARYE.OfficeTools.Services
                         byKey[opt.Key] = opt;
                         writable[opt.Key] = 0;
                     }
-                    if (!p.IsReadOnly) writable[opt.Key]++;
+                    // Locked only because the room is in a group: writable once the parameter
+                    // varies by group instance, which Apply offers to switch on.
+                    if (!p.IsReadOnly || GroupVaryHelper.NeedsVary(room, p)) writable[opt.Key]++;
                 }
             }
 
@@ -391,7 +393,8 @@ namespace ARYE.OfficeTools.Services
                 SpecLabel = RevitSpecHelper.SpecLabel(spec, p.StorageType),
                 IsShared = p.IsShared,
                 SharedGuid = p.IsShared ? p.GUID : Guid.Empty,
-                BuiltIn = bip
+                BuiltIn = bip,
+                GroupLabel = GroupLabelOf(p.Definition)
             };
 
             switch (p.StorageType)
@@ -412,6 +415,21 @@ namespace ARYE.OfficeTools.Services
                     break;
             }
             return opt;
+        }
+
+        /// <summary>The Properties-palette group of a parameter ("Data", "Identity Data"...), or "Other".</summary>
+        private static string GroupLabelOf(Definition def)
+        {
+            try
+            {
+                string label = LabelUtils.GetLabelForGroup(def.GetGroupTypeId());
+                return string.IsNullOrWhiteSpace(label) ? "Other" : label;
+            }
+            catch (Autodesk.Revit.Exceptions.ApplicationException)
+            {
+                // A definition with no group (empty ForgeTypeId) has no label: Revit lists it under Other.
+                return "Other";
+            }
         }
 
         /// <summary>Finds the option's parameter on an element (or on its type for type options).</summary>
@@ -524,6 +542,7 @@ namespace ARYE.OfficeTools.Services
             }
 
             var counted = new List<WindowContribution>();
+            var varyNeeds = new Dictionary<long, GroupVaryHelper.Need>();
             var missingLight = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var missingVent = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -568,12 +587,34 @@ namespace ARYE.OfficeTools.Services
                 LightVentRoomRow r = roomById[t.RoomId];
                 r.Totals = t;
                 RefineChanges(r, lightTarget, ventTarget);
+                FlagGroupVary(r, lightTarget, ventTarget, varyNeeds);
                 FillRoomText(r, lightTarget, ventTarget);
             }
 
             preview.FamiliesMissingLight = missingLight.OrderBy(s => s).ToList();
             preview.FamiliesMissingVent = missingVent.OrderBy(s => s).ToList();
+            preview.GroupVaryNeeds = varyNeeds.Values.ToList();
             return preview;
+        }
+
+        /// <summary>
+        /// Marks a room that will change but sits in a group whose target parameter does not vary by
+        /// group instance, and collects that parameter so Apply can offer to switch it on.
+        /// </summary>
+        private void FlagGroupVary(LightVentRoomRow r, LightVentParamOption lightTarget, LightVentParamOption ventTarget,
+            Dictionary<long, GroupVaryHelper.Need> needs)
+        {
+            r.NeedsGroupVary = false;
+            if (!r.WillChange) return;
+            Element room = _doc.GetElement(r.Id);
+            if (!GroupVaryHelper.IsGroupMember(room)) return;
+            foreach (var (changes, target) in new[] { (r.Totals.LightChanges, lightTarget), (r.Totals.VentChanges, ventTarget) })
+            {
+                Parameter p = changes && target != null ? Find(room, target) : null;
+                if (!GroupVaryHelper.NeedsVary(room, p)) continue;
+                GroupVaryHelper.Collect(room, p, needs);
+                r.NeedsGroupVary = true;
+            }
         }
 
         private double? ReadCurrent(Element room, LightVentParamOption target, out bool canWrite)
@@ -585,7 +626,7 @@ namespace ARYE.OfficeTools.Services
             canWrite = false;
             Parameter p = Find(room, target);
             if (p == null) return null;
-            canWrite = !p.IsReadOnly;
+            canWrite = !p.IsReadOnly || GroupVaryHelper.NeedsVary(room, p);
             return ReadValue(p, target, out string _);
         }
 
@@ -646,7 +687,9 @@ namespace ARYE.OfficeTools.Services
                 case RoomLightVentStatus.NoValues: r.StatusText = "UNCHANGED"; break;
                 default: r.StatusText = "CANNOT WRITE"; break;
             }
-            r.NoteText = t.Note;
+            r.NoteText = r.NeedsGroupVary
+                ? (string.IsNullOrEmpty(t.Note) ? "" : t.Note + " · ") + "in a group: the parameter must vary by group instance"
+                : t.Note;
 
             var sb = new StringBuilder();
             foreach (LightVentWindowRow w in r.Windows)
@@ -679,11 +722,17 @@ namespace ARYE.OfficeTools.Services
         /// Writes the totals of every room marked WILL CHANGE, in one transaction. Rooms are the
         /// unit of the result: Succeeded lists rooms written, Failed the rooms Revit refused.
         /// </summary>
+        /// <param name="allowGroupVary">
+        /// True: first switch the parameters in <see cref="LightVentPreview.GroupVaryNeeds"/> to vary by
+        /// group instance, in the same transaction, so rooms inside groups can be written. False: those
+        /// rooms are skipped and listed.
+        /// </param>
         public OperationResult<string> Write(LightVentPreview preview, LightVentParamOption lightTarget,
-            LightVentParamOption ventTarget, out bool committed)
+            LightVentParamOption ventTarget, bool allowGroupVary, out bool committed, out List<string> variedParameters)
         {
             var result = new OperationResult<string>();
             committed = false;
+            variedParameters = new List<string>();
             List<LightVentRoomRow> rooms = preview.Rooms.Where(r => r.WillChange).ToList();
             if (rooms.Count == 0) return result;
 
@@ -693,9 +742,22 @@ namespace ARYE.OfficeTools.Services
                 var failures = new RevitFailureCollector(result, "Room Light & Vent");
                 failures.Attach(tx);
 
+                if (allowGroupVary && preview.GroupVaryNeeds.Count > 0)
+                {
+                    var errors = new List<string>();
+                    variedParameters = GroupVaryHelper.AllowVary(_doc, preview.GroupVaryNeeds, errors);
+                    foreach (string e in errors) result.Failed.Add(new OperationFailure("Vary by group instance", e));
+                }
+
                 foreach (LightVentRoomRow r in rooms)
                 {
                     Element room = _doc.GetElement(r.Id);
+                    if (r.NeedsGroupVary && !allowGroupVary)
+                    {
+                        result.Skipped.Add(new OperationSkip("Room " + r.RoomText,
+                            "inside a group, and the parameter does not vary by group instance"));
+                        continue;
+                    }
                     try
                     {
                         if (r.Totals.LightChanges) Store(Find(room, lightTarget), lightTarget, r.Totals.NewLight.Value);

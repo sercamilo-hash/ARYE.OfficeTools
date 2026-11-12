@@ -13,6 +13,7 @@ using ARYE.OfficeTools.Core.LightVent;
 using ARYE.OfficeTools.Core.Results;
 using ARYE.OfficeTools.Models;
 using ARYE.OfficeTools.Services;
+using ARYE.OfficeTools.Views.Controls;
 // Autodesk.Revit.UI / Autodesk.Revit.DB declare their own ComboBox, Color, Grid... — alias to WPF.
 using Binding = System.Windows.Data.Binding;
 using Color = System.Windows.Media.Color;
@@ -57,7 +58,7 @@ namespace ARYE.OfficeTools.Views
         private long? _selectedRoom;
 
         // ── UI ────────────────────────────────────────────────────────────
-        private ComboBox _cmbLightSrc, _cmbVentSrc, _cmbLightDst, _cmbVentDst;
+        private ParameterPicker _cmbLightSrc, _cmbVentSrc, _cmbLightDst, _cmbVentDst;
         private TextBlock _lblSourceHint, _lblMissing, _lblSkipped, _lblSelInfo, _lblLastRun;
         private TextBlock _statChange, _statSame, _statUnchanged, _statSkipped;
         private Button _btnApply, _btnLinksNo, _btnLinksYes;
@@ -218,7 +219,7 @@ namespace ARYE.OfficeTools.Views
         {
             var sp = new StackPanel();
             sp.Children.Add(Label("Light area from"));
-            _cmbLightSrc = Combo();
+            _cmbLightSrc = Picker();
             Hint(_cmbLightSrc, "Window parameter that holds the light (glazed) area. Every parameter of the window families in this model is listed, " +
                                "type parameters first: each entry shows Type or Instance, the data type, and how many families carry it. " +
                                "Area, Number, Integer and Text parameters can be chosen (text such as \"9.80 SF\" is read as a number); the rest are shown disabled.");
@@ -226,7 +227,7 @@ namespace ARYE.OfficeTools.Views
             sp.Children.Add(_cmbLightSrc);
 
             sp.Children.Add(Label("Vent area from"));
-            _cmbVentSrc = Combo();
+            _cmbVentSrc = Picker();
             Hint(_cmbVentSrc, "Window parameter that holds the openable (ventilation) area.");
             _cmbVentSrc.SelectionChanged += delegate { OnPairChanged(_cmbVentSrc, _cmbLightSrc, "vent area"); };
             sp.Children.Add(_cmbVentSrc);
@@ -245,13 +246,13 @@ namespace ARYE.OfficeTools.Views
         {
             var sp = new StackPanel();
             sp.Children.Add(Label("Write light total to"));
-            _cmbLightDst = Combo();
+            _cmbLightDst = Picker();
             Hint(_cmbLightDst, "Room parameter that receives the sum of the light area of the room's exterior windows.");
             _cmbLightDst.SelectionChanged += delegate { OnPairChanged(_cmbLightDst, _cmbVentDst, "light total"); };
             sp.Children.Add(_cmbLightDst);
 
             sp.Children.Add(Label("Write vent total to"));
-            _cmbVentDst = Combo();
+            _cmbVentDst = Picker();
             Hint(_cmbVentDst, "Room parameter that receives the sum of the vent area of the room's exterior windows.");
             _cmbVentDst.SelectionChanged += delegate { OnPairChanged(_cmbVentDst, _cmbLightDst, "vent total"); };
             sp.Children.Add(_cmbVentDst);
@@ -467,14 +468,16 @@ namespace ARYE.OfficeTools.Views
             List<LightVentParamOption> sources = _svc.DiscoverWindowParameters(_hostWindows.Concat(_linkWindows));
             List<LightVentParamOption> targets = _svc.DiscoverRoomParameters(_rooms);
 
+            // One parameter cannot feed both values (or receive both totals): the one the partner
+            // selector holds is listed dimmed with that reason, never silently swapped.
+            BlockPartner(_cmbLightSrc, _cmbVentSrc, "vent area");
+            BlockPartner(_cmbVentSrc, _cmbLightSrc, "light area");
+            BlockPartner(_cmbLightDst, _cmbVentDst, "vent total");
+            BlockPartner(_cmbVentDst, _cmbLightDst, "light total");
             FillCombo(_cmbLightSrc, sources, "lightSource");
             FillCombo(_cmbVentSrc, sources, "ventSource");
             FillCombo(_cmbLightDst, targets, "lightTarget");
             FillCombo(_cmbVentDst, targets, "ventTarget");
-            RefreshBlocked(_cmbLightSrc, _cmbVentSrc, "light area");
-            RefreshBlocked(_cmbVentSrc, _cmbLightSrc, "vent area");
-            RefreshBlocked(_cmbLightDst, _cmbVentDst, "light total");
-            RefreshBlocked(_cmbVentDst, _cmbLightDst, "vent total");
 
             if (!sources.Any(o => o.IsUsable))
             {
@@ -483,55 +486,54 @@ namespace ARYE.OfficeTools.Views
             }
         }
 
-        private void FillCombo(ComboBox combo, List<LightVentParamOption> options, string settingName)
+        private void FillCombo(ParameterPicker picker, List<LightVentParamOption> options, string settingName)
         {
             string saved = BauToolsRunStampService.ReadSetting(_doc, TOOL_KEY, settingName);
-            combo.Items.Clear();
-            foreach (LightVentParamOption o in options)
-            {
-                var item = new ComboBoxItem
-                {
-                    Content = o.Display,
-                    Tag = o,
-                    IsEnabled = o.IsUsable,
-                    ToolTip = o.IsUsable ? null : "Not selectable: " + o.BlockedReason + "."
-                };
-                ToolTipService.SetShowOnDisabled(item, true);
-                combo.Items.Add(item);
-                if (saved != null && o.Key == saved && o.IsUsable) combo.SelectedItem = item;
-            }
-            if (options.Count == 0)
-            {
-                combo.Items.Add(new ComboBoxItem { Content = "(none found)", IsEnabled = false });
-            }
+            picker.Placeholder = options.Count == 0 ? "(none found)" : "Choose a parameter…";
+            picker.SetItems(options.Select(ToPickerItem), saved);
         }
 
-        private static LightVentParamOption Selected(ComboBox combo) =>
-            (combo.SelectedItem as ComboBoxItem)?.Tag as LightVentParamOption;
+        /// <summary>Maps a discovered parameter to the shared picker's item.</summary>
+        private static ParameterPickerItem ToPickerItem(LightVentParamOption o)
+        {
+            string dataType = o.IsArea ? "Area"
+                            : o.IsText ? "Text"
+                            : o.IsUsable && o.IsInteger ? "Integer"
+                            : o.IsUsable && o.Storage == StorageType.Double ? "Number"
+                            : o.SpecLabel;
+            return new ParameterPickerItem
+            {
+                Key = o.Key,
+                Name = o.Name,
+                Group = o.GroupLabel,
+                DataType = dataType,
+                IsType = o.IsType,
+                IsShared = o.IsShared,
+                Availability = string.Format("{0} of {1} {2}", o.AvailableOn, o.TotalCount, o.CountNoun),
+                BlockedReason = o.IsUsable ? null : o.BlockedReason,
+                Tag = o
+            };
+        }
+
+        private static LightVentParamOption Selected(ParameterPicker picker) =>
+            picker.SelectedItem?.Tag as LightVentParamOption;
 
         /// <summary>
         /// One parameter cannot feed both values (or receive both totals): the option taken by the
         /// partner selector is shown disabled with a hint, never silently swapped.
         /// </summary>
-        private void OnPairChanged(ComboBox changed, ComboBox partner, string role)
+        private void OnPairChanged(ParameterPicker changed, ParameterPicker partner, string role)
         {
             if (_building) return;
-            RefreshBlocked(partner, changed, role);
+            partner.Refresh();
             Recompute();
         }
 
-        private static void RefreshBlocked(ComboBox target, ComboBox owner, string ownerRole)
+        /// <summary>In <paramref name="target"/>, the parameter <paramref name="owner"/> holds is blocked.</summary>
+        private static void BlockPartner(ParameterPicker target, ParameterPicker owner, string ownerRole)
         {
-            LightVentParamOption taken = Selected(owner);
-            foreach (ComboBoxItem item in target.Items.OfType<ComboBoxItem>())
-            {
-                if (!(item.Tag is LightVentParamOption o)) continue;
-                if (!o.IsUsable) continue;   // stays disabled with its own reason
-                bool blocked = taken != null && o.Key == taken.Key;
-                item.IsEnabled = !blocked;
-                item.ToolTip = blocked ? "Already used for the " + ownerRole + "." : null;
-                ToolTipService.SetShowOnDisabled(item, true);
-            }
+            target.ExtraBlock = item =>
+                owner.SelectedItem != null && owner.SelectedItem.Key == item.Key ? "already used for the " + ownerRole : null;
         }
 
         private void SetIncludeLinks(bool include)
@@ -853,16 +855,53 @@ namespace ARYE.OfficeTools.Views
             if (_includeLinks)
                 lines.Add(string.Format("Linked windows included: {0}", _linkWindows.Count));
 
-            var td = new TaskDialog("BauTools — confirm")
+            bool allowGroupVary = false;
+            int inGroups = _preview.RoomsNeedingGroupVary;
+            if (inGroups > 0)
             {
-                MainInstruction = string.Format("Write light and vent totals to {0} room(s)?", changing.Count),
-                MainContent = string.Join("\n", lines),
-                CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No,
-                DefaultButton = TaskDialogResult.No
-            };
-            if (td.Show() != TaskDialogResult.Yes) return;
+                // Rooms inside groups can only be written when the target parameter varies by group
+                // instance. Ask once, with the numbers, instead of failing those rooms silently.
+                string names = GroupVaryHelper.Names(_preview.GroupVaryNeeds);
+                int outside = changing.Count - inGroups;
+                var ask = new TaskDialog("BauTools — rooms inside groups")
+                {
+                    MainInstruction = string.Format("{0} of the {1} room(s) to write are inside groups.", inGroups, changing.Count),
+                    MainContent =
+                        "Revit only lets a parameter be written on a room inside a group when the parameter can vary " +
+                        "by group instance. " + names + " cannot yet." +
+                        "\n\nAllowing it is a project setting for each parameter (Manage › Project Parameters › " +
+                        "\"Values can vary by group instance\"). Existing values do not change, and afterwards every copy " +
+                        "of a group keeps its own value.\n\n" + string.Join("\n", lines),
+                    CommonButtons = TaskDialogCommonButtons.Cancel,
+                    DefaultButton = TaskDialogResult.Cancel
+                };
+                ask.AddCommandLink(TaskDialogCommandLinkId.CommandLink1,
+                    string.Format("Allow {0} to vary by group instance and write all {1} room(s)", names, changing.Count),
+                    "Recommended: each room in each copy of a group gets its own totals. One undo step.");
+                if (outside > 0)
+                {
+                    ask.AddCommandLink(TaskDialogCommandLinkId.CommandLink2,
+                        string.Format("Write only the {0} room(s) outside groups", outside),
+                        string.Format("The {0} room(s) inside groups are skipped and listed in the result.", inGroups));
+                }
+                TaskDialogResult choice = ask.Show();
+                if (choice == TaskDialogResult.CommandLink1) allowGroupVary = true;
+                else if (choice != TaskDialogResult.CommandLink2) return;
+            }
+            else
+            {
+                var td = new TaskDialog("BauTools — confirm")
+                {
+                    MainInstruction = string.Format("Write light and vent totals to {0} room(s)?", changing.Count),
+                    MainContent = string.Join("\n", lines),
+                    CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No,
+                    DefaultButton = TaskDialogResult.No
+                };
+                if (td.Show() != TaskDialogResult.Yes) return;
+            }
 
-            OperationResult<string> result = _svc.Write(_preview, lt, vt, out bool committed);
+            OperationResult<string> result = _svc.Write(_preview, lt, vt, allowGroupVary,
+                out bool committed, out List<string> varied);
 
             if (committed)
             {
@@ -884,7 +923,9 @@ namespace ARYE.OfficeTools.Views
                 MainInstruction = committed
                     ? string.Format("{0} room(s) written.", result.Succeeded.Count)
                     : "Nothing was written (the transaction was rolled back).",
-                MainContent = result.BuildSummary()
+                MainContent = (committed && varied.Count > 0
+                                  ? "Now varies by group instance: " + string.Join(", ", varied) + "\n\n"
+                                  : string.Empty) + result.BuildSummary()
             };
             res.Show();
 
@@ -1011,6 +1052,9 @@ namespace ARYE.OfficeTools.Views
             };
             return Hint(b, tip);
         }
+
+        private ParameterPicker Picker() =>
+            new ParameterPicker { Margin = new Thickness(0, 0, 0, 6), HorizontalAlignment = HorizontalAlignment.Stretch };
 
         private ComboBox Combo() =>
             new ComboBox { Margin = new Thickness(0, 0, 0, 6), Padding = new Thickness(4, 3, 4, 3), HorizontalAlignment = HorizontalAlignment.Stretch };

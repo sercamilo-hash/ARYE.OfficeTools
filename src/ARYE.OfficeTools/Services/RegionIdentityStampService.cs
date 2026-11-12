@@ -178,6 +178,13 @@ namespace ARYE.OfficeTools.Services
             }
         }
 
+        /// <summary>The identity parameter on a region, or null.</summary>
+        public Parameter Find(FilledRegion region, string paramName)
+        {
+            Parameter p = region?.LookupParameter(paramName);
+            return p != null && p.StorageType == StorageType.String ? p : null;
+        }
+
         /// <summary>Writes one identity field on one region. The caller owns the transaction.</summary>
         public bool Write(FilledRegion region, string paramName, string targetValue, out string error)
         {
@@ -192,7 +199,9 @@ namespace ARYE.OfficeTools.Services
                 }
                 if (p.IsReadOnly)
                 {
-                    error = paramName + " is read-only on this element.";
+                    error = GroupVaryHelper.NeedsVary(region, p)
+                        ? paramName + " cannot be written inside a group: it does not vary by group instance."
+                        : paramName + " is read-only on this element.";
                     return false;
                 }
                 return p.Set(targetValue);

@@ -11,6 +11,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using ARYE.OfficeTools.Models;
 using ARYE.OfficeTools.Services;
+using ARYE.OfficeTools.Views.Controls;
 // Autodesk.Revit.UI and Autodesk.Revit.DB each declare their own ComboBox/TextBox/Color —
 // legacy in-canvas UI types unrelated to WPF. Alias to the WPF ones this window actually uses.
 using ComboBox = System.Windows.Controls.ComboBox;
@@ -56,7 +57,8 @@ namespace ARYE.OfficeTools.Views
         private bool _building = true;
 
         // ── UI ────────────────────────────────────────────────────────────
-        private ComboBox _cmbScope, _cmbType, _cmbView, _cmbParam, _cmbPolicy, _cmbTextMode, _cmbDecimals;
+        private ComboBox _cmbScope, _cmbType, _cmbView, _cmbPolicy, _cmbTextMode, _cmbDecimals;
+        private ParameterPicker _cmbParam;
         private ComboBox _cmbBuilding, _cmbSide;
         private TextBox _txtSearch, _txtSuffix;
         private CheckBox _chkMasking, _chkShowType, _chkOnlyCompatible, _chkRound, _chkThousands;
@@ -248,7 +250,7 @@ namespace ARYE.OfficeTools.Views
             WrapPanel line1 = new WrapPanel { Margin = new Thickness(0, 0, 0, 6) };
 
             line1.Children.Add(Label("Target parameter"));
-            _cmbParam = Combo(520);
+            _cmbParam = new ParameterPicker { Width = 520, Margin = new Thickness(0, 2, 12, 0), VerticalAlignment = VerticalAlignment.Center };
             _cmbParam.SelectionChanged += delegate { if (!_building) { UpdateParamInfo(); RebuildPreview(); } };
             line1.Children.Add(Hint(_cmbParam,
                 "Only parameters that really exist on the selected regions and are writable are listed. " +
@@ -682,15 +684,12 @@ namespace ARYE.OfficeTools.Views
             string keep = null;
             try
             {
-                ParameterTargetOption cur = _cmbParam.SelectedItem as ParameterTargetOption;
+                ParameterTargetOption cur = SelectedTarget();
                 if (cur != null) keep = cur.Key;
 
                 _targets = _params.Discover(_filtered, _chkShowType.IsChecked == true);
                 if (_chkOnlyCompatible.IsChecked == true)
                     _targets = _targets.Where(o => o.CanReceiveArea).ToList();
-
-                _cmbParam.Items.Clear();
-                foreach (ParameterTargetOption o in _targets) _cmbParam.Items.Add(o);
 
                 int idx = -1;
                 if (keep != null) idx = _targets.FindIndex(o => o.Key == keep);
@@ -699,8 +698,8 @@ namespace ARYE.OfficeTools.Views
                 if (idx < 0) idx = _targets.FindIndex(o => o.CanReceiveArea
                     && string.Equals(o.Name, PREFERRED_PARAM_NAME, StringComparison.OrdinalIgnoreCase));
                 if (idx < 0) idx = _targets.FindIndex(o => o.IsAreaSpec && o.Binding == TargetBinding.Instance);
-                if (idx < 0 && _targets.Count > 0) idx = 0;
-                _cmbParam.SelectedIndex = idx;
+                if (idx < 0 && _targets.Count > 0) idx = _targets.FindIndex(o => o.CanReceiveArea);
+                _cmbParam.SetItems(_targets.Select(ToPickerItem), idx >= 0 ? _targets[idx].Key : null);
             }
             finally { _building = prev; }
 
@@ -708,9 +707,36 @@ namespace ARYE.OfficeTools.Views
             RebuildPreview();
         }
 
+        private ParameterTargetOption SelectedTarget() => _cmbParam.SelectedItem?.Tag as ParameterTargetOption;
+
+        /// <summary>Maps a discovered target parameter to the shared picker's item.</summary>
+        private static ParameterPickerItem ToPickerItem(ParameterTargetOption o)
+        {
+            string dataType = o.IsAreaSpec ? "Area"
+                            : o.Storage == StorageType.String ? "Text"
+                            : o.Storage == StorageType.Integer ? "Integer"
+                            : o.CanReceiveArea ? "Number"
+                            : o.SpecLabel;
+            string availability = string.Format("{0} of {1} regions · {2}", o.AvailableOn, o.TotalCount, o.OriginLabel);
+            if (o.Binding == TargetBinding.Type) availability += " · affects all instances of the type";
+            if (o.ReadOnlySomewhere) availability += " · read-only on some";
+            return new ParameterPickerItem
+            {
+                Key = o.Key,
+                Name = o.Name,
+                Group = o.GroupLabel,
+                DataType = dataType,
+                IsType = o.Binding == TargetBinding.Type,
+                IsShared = o.IsShared,
+                Availability = availability,
+                BlockedReason = o.CanReceiveArea ? null : o.SpecLabel + " cannot hold an area",
+                Tag = o
+            };
+        }
+
         private void UpdateParamInfo()
         {
-            ParameterTargetOption o = _cmbParam.SelectedItem as ParameterTargetOption;
+            ParameterTargetOption o = SelectedTarget();
 
             if (o == null)
             {
@@ -749,7 +775,7 @@ namespace ARYE.OfficeTools.Views
 
         private void RebuildPreview()
         {
-            ParameterTargetOption o = _cmbParam.SelectedItem as ParameterTargetOption;
+            ParameterTargetOption o = SelectedTarget();
 
             _rows.Clear();
             List<RegionAreaMigrationItem> items = _svc.BuildPreview(_filtered, o, _opt);
@@ -930,7 +956,11 @@ namespace ARYE.OfficeTools.Views
             {
                 RefreshTargets();
                 int idx = _targets.FindIndex(o => string.Equals(o.Name, dlg.ParameterName, StringComparison.OrdinalIgnoreCase));
-                if (idx >= 0) _cmbParam.SelectedIndex = idx;
+                if (idx >= 0 && _cmbParam.SelectByKey(_targets[idx].Key))
+                {
+                    UpdateParamInfo();
+                    RebuildPreview();
+                }
             }
         }
 
@@ -982,7 +1012,7 @@ namespace ARYE.OfficeTools.Views
                 sfd.FileName = string.Format("BauTools_RegionAreas_{0:yyyyMMdd_HHmm}.csv", DateTime.Now);
                 if (sfd.ShowDialog() != true) return;
 
-                _svc.ExportCsv(sfd.FileName, _rows.ToList(), _cmbParam.SelectedItem as ParameterTargetOption);
+                _svc.ExportCsv(sfd.FileName, _rows.ToList(), SelectedTarget());
                 TaskDialog.Show("BauTools", "Saved:\n" + sfd.FileName);
             }
             catch (Exception ex)
@@ -993,7 +1023,7 @@ namespace ARYE.OfficeTools.Views
 
         private void OnWrite(object sender, RoutedEventArgs e)
         {
-            ParameterTargetOption target = _cmbParam.SelectedItem as ParameterTargetOption;
+            ParameterTargetOption target = SelectedTarget();
             if (target == null)
             {
                 TaskDialog.Show("BauTools", "Choose a target parameter first.");
@@ -1033,14 +1063,49 @@ namespace ARYE.OfficeTools.Views
             if (target.Binding == TargetBinding.Type)
                 lines.Add("⚠ The target is a TYPE parameter: instances of the same type will end up sharing the last value written.");
 
-            TaskDialog td = new TaskDialog("BauTools — confirm");
-            td.MainInstruction = string.Format("Apply changes to {0} checked region(s)?", checked_.Count);
-            td.MainContent = string.Join("\n", lines);
-            td.CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No;
-            td.DefaultButton = TaskDialogResult.No;
-            if (td.Show() != TaskDialogResult.Yes) return;
+            bool allowGroupVary = false;
+            List<GroupVaryHelper.Need> groupNeeds = _svc.CollectGroupVaryNeeds(checked_, target, buildingTarget, sideTarget);
+            if (groupNeeds.Count > 0)
+            {
+                // Regions inside groups can only be written when the parameter varies by group
+                // instance. Ask once, with the numbers, instead of failing those rows silently.
+                string names = GroupVaryHelper.Names(groupNeeds);
+                int inGroups = checked_.Count(r => r.IsGroupMember);
+                int outside = checked_.Count - inGroups;
+                TaskDialog ask = new TaskDialog("BauTools — regions inside groups");
+                ask.MainInstruction = string.Format("{0} of the {1} checked region(s) are inside groups.", inGroups, checked_.Count);
+                ask.MainContent =
+                    "Revit only lets a parameter be written on an element inside a group when the parameter can vary " +
+                    "by group instance. " + names + " cannot yet.\n\n" +
+                    "Allowing it is a project setting for each parameter (Manage › Project Parameters › " +
+                    "\"Values can vary by group instance\"). Existing values do not change, and afterwards every copy " +
+                    "of a group keeps its own value.\n\n" + string.Join("\n", lines);
+                ask.CommonButtons = TaskDialogCommonButtons.Cancel;
+                ask.DefaultButton = TaskDialogResult.Cancel;
+                ask.AddCommandLink(TaskDialogCommandLinkId.CommandLink1,
+                    string.Format("Allow {0} to vary by group instance and apply to all {1} region(s)", names, checked_.Count),
+                    "Recommended: each region in each copy of a group gets its own value. One undo step.");
+                if (outside > 0)
+                {
+                    ask.AddCommandLink(TaskDialogCommandLinkId.CommandLink2,
+                        string.Format("Apply only to the {0} region(s) outside groups", outside),
+                        "Regions inside groups are skipped and counted in the result.");
+                }
+                TaskDialogResult choice = ask.Show();
+                if (choice == TaskDialogResult.CommandLink1) allowGroupVary = true;
+                else if (choice != TaskDialogResult.CommandLink2) return;
+            }
+            else
+            {
+                TaskDialog td = new TaskDialog("BauTools — confirm");
+                td.MainInstruction = string.Format("Apply changes to {0} checked region(s)?", checked_.Count);
+                td.MainContent = string.Join("\n", lines);
+                td.CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No;
+                td.DefaultButton = TaskDialogResult.No;
+                if (td.Show() != TaskDialogResult.Yes) return;
+            }
 
-            MigrationReport rep = _svc.Write(_rows.ToList(), target, _opt, buildingTarget, sideTarget);
+            MigrationReport rep = _svc.Write(_rows.ToList(), target, _opt, buildingTarget, sideTarget, allowGroupVary);
 
             string scope = _cmbScope.SelectedIndex == 1 ? "active view"
                          : _cmbScope.SelectedIndex == 2 ? "entire model"

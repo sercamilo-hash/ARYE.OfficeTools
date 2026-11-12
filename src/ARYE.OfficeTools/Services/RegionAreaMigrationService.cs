@@ -41,6 +41,10 @@ namespace ARYE.OfficeTools.Services
         public int SkippedMissingParam;
         public int SkippedReadOnly;
         public int SkippedBadGeometry;
+        /// <summary>Rows inside groups left unwritten because the user chose not to allow varying.</summary>
+        public int SkippedInGroup;
+        /// <summary>Parameters switched to "vary by group instance" during this run.</summary>
+        public List<string> VariedParameters = new List<string>();
         public int Failed;
         public List<string> Failures = new List<string>();
         public List<string> Warnings = new List<string>();
@@ -67,6 +71,8 @@ namespace ARYE.OfficeTools.Services
                 if (SkippedMissingParam > 0) sb.AppendLine(string.Format("Skipped — parameter not present: {0}", SkippedMissingParam));
                 if (SkippedReadOnly > 0) sb.AppendLine(string.Format("Skipped — read-only: {0}", SkippedReadOnly));
                 if (SkippedBadGeometry > 0) sb.AppendLine(string.Format("Skipped — area could not be computed: {0}", SkippedBadGeometry));
+                if (SkippedInGroup > 0) sb.AppendLine(string.Format("Skipped — inside a group, parameter does not vary by group instance: {0}", SkippedInGroup));
+                if (VariedParameters.Count > 0) sb.AppendLine("Now varies by group instance: " + string.Join(", ", VariedParameters));
                 if (Failed > 0) sb.AppendLine(string.Format("Failed: {0}", Failed));
                 if (!string.IsNullOrEmpty(BuildingTargetValue))
                     sb.AppendLine(string.Format("Building -> {0}: {1} written (new {2} · overwritten {3}){4}",
@@ -371,7 +377,10 @@ namespace ARYE.OfficeTools.Services
 
             bool readOnly;
             try { readOnly = p.IsReadOnly; } catch { readOnly = true; }
-            if (readOnly)
+            // Locked only because the region is in a group: still a candidate, Apply offers to let
+            // the parameter vary by group instance.
+            it.NeedsGroupVary = GroupVaryHelper.NeedsVary(it.Region, p);
+            if (readOnly && !it.NeedsGroupVary)
             {
                 it.Status = MigrationStatus.ReadOnlyParameter;
                 try { it.CurrentValue = DescribeCurrent(p, target); } catch { }
@@ -530,12 +539,42 @@ namespace ARYE.OfficeTools.Services
         //  3 · Write
         // ────────────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Parameters that must vary by group instance before the checked rows inside groups can be
+        /// written: the area target, and Building/Side when this run stamps them.
+        /// </summary>
+        public List<GroupVaryHelper.Need> CollectGroupVaryNeeds(
+            IEnumerable<RegionAreaMigrationItem> checkedRows, ParameterTargetOption target,
+            string buildingTarget, string sideTarget)
+        {
+            var needs = new Dictionary<long, GroupVaryHelper.Need>();
+            foreach (RegionAreaMigrationItem it in checkedRows)
+            {
+                if (!GroupVaryHelper.IsGroupMember(it.Region)) continue;
+                if (it.IsWritable && it.NeedsGroupVary)
+                    GroupVaryHelper.Collect(it.Region, RegionParameterDiscoveryService.Resolve(it.Region, target), needs);
+                if (!string.IsNullOrEmpty(buildingTarget) && IsIdentityWrite(it.BuildingStatus))
+                    GroupVaryHelper.Collect(it.Region, _identity.Find(it.Region, RegionIdentityStampService.BUILDING_PARAM), needs);
+                if (!string.IsNullOrEmpty(sideTarget) && IsIdentityWrite(it.SideStatus))
+                    GroupVaryHelper.Collect(it.Region, _identity.Find(it.Region, RegionIdentityStampService.SIDE_PARAM), needs);
+            }
+            return needs.Values.ToList();
+        }
+
+        private static bool IsIdentityWrite(IdentityFieldStatus s) =>
+            s == IdentityFieldStatus.New || s == IdentityFieldStatus.Overwrite;
+
+        /// <param name="allowGroupVary">
+        /// True: first switch the parameters from <see cref="CollectGroupVaryNeeds"/> to vary by group
+        /// instance, in the same transaction. False: rows inside groups that need it are skipped and counted.
+        /// </param>
         public MigrationReport Write(
             IList<RegionAreaMigrationItem> items,
             ParameterTargetOption target,
             RegionAreaWriteOptions options,
             string buildingTarget,
-            string sideTarget)
+            string sideTarget,
+            bool allowGroupVary)
         {
             MigrationReport rep = new MigrationReport();
             rep.TargetParameter = target != null
@@ -563,6 +602,15 @@ namespace ARYE.OfficeTools.Services
                 {
                     t.Start();
 
+                    if (allowGroupVary)
+                    {
+                        List<GroupVaryHelper.Need> needs = CollectGroupVaryNeeds(
+                            items.Where(i => i.Selected), target, buildingTarget, sideTarget);
+                        var errors = new List<string>();
+                        rep.VariedParameters = GroupVaryHelper.AllowVary(_doc, needs, errors);
+                        foreach (string e in errors) rep.Failures.Add(e);
+                    }
+
                     foreach (RegionAreaMigrationItem it in items)
                     {
                         if (!it.Selected)
@@ -572,7 +620,10 @@ namespace ARYE.OfficeTools.Services
                             continue;
                         }
 
-                        WriteAreaTarget(it, target, rep);
+                        if (it.IsWritable && it.NeedsGroupVary && !allowGroupVary)
+                            rep.SkippedInGroup++;
+                        else
+                            WriteAreaTarget(it, target, rep);
 
                         // Building/Side are independent of the area target's own outcome: a region
                         // missing "Region Area" can still get its identity stamped, and vice versa.
