@@ -30,6 +30,12 @@ namespace ARYE.OfficeTools.Infrastructure
         /// <summary>View templates applicable to CeilingPlan views (Step 4, CeilingPlans source).</summary>
         public List<NamedElementRef> CeilingPlanTemplates { get; set; } = new List<NamedElementRef>();
 
+        /// <summary>The model's area schedules a set can copy as its area table (tables this tool made are left out).</summary>
+        public List<NamedElementRef> AreaSchedules { get; set; } = new List<NamedElementRef>();
+
+        /// <summary>View templates that can be applied to a schedule.</summary>
+        public List<NamedElementRef> ScheduleTemplates { get; set; } = new List<NamedElementRef>();
+
         /// <summary>Names of the model's line styles (Lines subcategories) - the separators' style choices.</summary>
         public List<string> LineStyleNames { get; set; } = new List<string>();
 

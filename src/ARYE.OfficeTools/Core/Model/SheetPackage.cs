@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ARYE.OfficeTools.Core.Sheets;
 
 namespace ARYE.OfficeTools.Core.Model
 {
@@ -89,6 +90,29 @@ namespace ARYE.OfficeTools.Core.Model
         /// level label, e.g. "1ST FL.".
         /// </summary>
         public string ViewNameSuffix { get; set; } = string.Empty;
+
+        /// <summary>When true, every view of the set also gets an area table copied from <see cref="AreaTableTemplateUniqueId"/>, filtered to its level.</summary>
+        public bool AddAreaTable { get; set; }
+
+        /// <summary>UniqueId of the area schedule each table is copied from. Its columns, sorting and totals are kept.</summary>
+        public string AreaTableTemplateUniqueId { get; set; }
+
+        /// <summary>UniqueId of the schedule view template applied to every table. Null/empty = none.</summary>
+        public string AreaTableViewTemplateUniqueId { get; set; }
+
+        /// <summary>Pattern of the table name, see <see cref="SheetNaming.ComposeTableName"/>. Empty = the default pattern.</summary>
+        public string AreaTableNamePattern { get; set; } = string.Empty;
+
+        /// <summary>Text the Building filter and the Building parameter use. Empty = the building's name in ZFA.</summary>
+        public string AreaTableBuildingValue { get; set; } = string.Empty;
+
+        public AreaTablePlacement AreaTablePlacement { get; set; } = AreaTablePlacement.BesideViewLeft;
+
+        /// <summary>The edge a <see cref="AreaTablePlacement.FixedEdge"/> stack sits on.</summary>
+        public AreaTableEdge AreaTableEdge { get; set; } = AreaTableEdge.Right;
+
+        /// <summary>Space between a view and its table (Under / Beside) or between stacked tables, inches.</summary>
+        public double AreaTableGapIn { get; set; } = 0.25;
 
         /// <summary>Slot matrix columns (1–4).</summary>
         public int Columns { get; set; } = 3;
@@ -202,6 +226,14 @@ namespace ARYE.OfficeTools.Core.Model
                 ViewNameSuffix = ViewNameSuffix,
                 Columns = Columns,
                 Rows = Rows,
+                AddAreaTable = AddAreaTable,
+                AreaTableTemplateUniqueId = AreaTableTemplateUniqueId,
+                AreaTableViewTemplateUniqueId = AreaTableViewTemplateUniqueId,
+                AreaTableNamePattern = AreaTableNamePattern,
+                AreaTableBuildingValue = AreaTableBuildingValue,
+                AreaTablePlacement = AreaTablePlacement,
+                AreaTableEdge = AreaTableEdge,
+                AreaTableGapIn = AreaTableGapIn,
                 ColumnCumulative = new List<double>(ColumnCumulative ?? new List<double>()),
                 RowCumulative = new List<double>(RowCumulative ?? new List<double>()),
                 DrawSeparatorLines = DrawSeparatorLines,

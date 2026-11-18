@@ -1,0 +1,452 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Sheet Diagrammer visual language: cool paper neutrals, one confident blue, hairline rules.
+        Green, amber and red carry meaning only: fine, recommended, required.
+        Merged only by the Diagrammer window, so no other BauTools tool changes.
+    -->
+
+    <Color x:Key="Dg.Color.Page">#E9EDF3</Color>
+    <Color x:Key="Dg.Color.Panel">#FFFFFF</Color>
+    <Color x:Key="Dg.Color.Panel2">#F5F7FA</Color>
+    <Color x:Key="Dg.Color.Panel3">#EEF2F7</Color>
+    <Color x:Key="Dg.Color.Line">#DCE2EB</Color>
+    <Color x:Key="Dg.Color.Line2">#C9D2DF</Color>
+    <Color x:Key="Dg.Color.Ink">#0E1626</Color>
+    <Color x:Key="Dg.Color.Ink2">#2C3A52</Color>
+    <Color x:Key="Dg.Color.Muted">#5A667A</Color>
+    <Color x:Key="Dg.Color.Accent">#1B5CE3</Color>
+    <Color x:Key="Dg.Color.Accent2">#164BBA</Color>
+    <Color x:Key="Dg.Color.AccentSoft">#E4ECFD</Color>
+    <Color x:Key="Dg.Color.AccentLine">#B7CBF6</Color>
+    <Color x:Key="Dg.Color.Ok">#0B7A55</Color>
+    <Color x:Key="Dg.Color.OkSoft">#DDF3EA</Color>
+    <Color x:Key="Dg.Color.Warn">#9A5208</Color>
+    <Color x:Key="Dg.Color.WarnSoft">#FCEFD6</Color>
+    <Color x:Key="Dg.Color.Bad">#B3261E</Color>
+    <Color x:Key="Dg.Color.BadSoft">#FBE3E1</Color>
+
+    <SolidColorBrush x:Key="Dg.Page" Color="{StaticResource Dg.Color.Page}" />
+    <SolidColorBrush x:Key="Dg.Panel" Color="{StaticResource Dg.Color.Panel}" />
+    <SolidColorBrush x:Key="Dg.Panel2" Color="{StaticResource Dg.Color.Panel2}" />
+    <SolidColorBrush x:Key="Dg.Panel3" Color="{StaticResource Dg.Color.Panel3}" />
+    <SolidColorBrush x:Key="Dg.Line" Color="{StaticResource Dg.Color.Line}" />
+    <SolidColorBrush x:Key="Dg.Line2" Color="{StaticResource Dg.Color.Line2}" />
+    <SolidColorBrush x:Key="Dg.Ink" Color="{StaticResource Dg.Color.Ink}" />
+    <SolidColorBrush x:Key="Dg.Ink2" Color="{StaticResource Dg.Color.Ink2}" />
+    <SolidColorBrush x:Key="Dg.Muted" Color="{StaticResource Dg.Color.Muted}" />
+    <SolidColorBrush x:Key="Dg.Accent" Color="{StaticResource Dg.Color.Accent}" />
+    <SolidColorBrush x:Key="Dg.Accent2" Color="{StaticResource Dg.Color.Accent2}" />
+    <SolidColorBrush x:Key="Dg.AccentSoft" Color="{StaticResource Dg.Color.AccentSoft}" />
+    <SolidColorBrush x:Key="Dg.AccentLine" Color="{StaticResource Dg.Color.AccentLine}" />
+    <SolidColorBrush x:Key="Dg.Ok" Color="{StaticResource Dg.Color.Ok}" />
+    <SolidColorBrush x:Key="Dg.OkSoft" Color="{StaticResource Dg.Color.OkSoft}" />
+    <SolidColorBrush x:Key="Dg.Warn" Color="{StaticResource Dg.Color.Warn}" />
+    <SolidColorBrush x:Key="Dg.WarnSoft" Color="{StaticResource Dg.Color.WarnSoft}" />
+    <SolidColorBrush x:Key="Dg.Bad" Color="{StaticResource Dg.Color.Bad}" />
+    <SolidColorBrush x:Key="Dg.BadSoft" Color="{StaticResource Dg.Color.BadSoft}" />
+    <SolidColorBrush x:Key="Dg.White" Color="#FFFFFF" />
+
+    <!-- Text -->
+    <Style x:Key="Dg.Text" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ink}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12.5" />
+    </Style>
+    <Style x:Key="Dg.MutedText" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="Foreground" Value="{StaticResource Dg.Muted}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="Dg.Label" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ink2}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Margin" Value="0,7,6,0" />
+    </Style>
+    <Style x:Key="Dg.Caps" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="Foreground" Value="{StaticResource Dg.Muted}" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style x:Key="Dg.SubTitle" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- Surfaces -->
+    <Style x:Key="Dg.Card" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Dg.Panel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Dg.Line}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.06" Color="#0E1626" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A field row that lights up while its setting is empty. Tag = "Required" | "Recommended" | "". -->
+    <Style x:Key="Dg.FieldRow" TargetType="Border">
+        <Setter Property="CornerRadius" Value="7" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="Margin" Value="-8,6,-8,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Required">
+                <Setter Property="Background" Value="{StaticResource Dg.BadSoft}" />
+            </Trigger>
+            <Trigger Property="Tag" Value="Recommended">
+                <Setter Property="Background" Value="{StaticResource Dg.WarnSoft}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.NeedText" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="FontSize" Value="9.5" />
+        <Setter Property="FontWeight" Value="ExtraBold" />
+        <Setter Property="Visibility" Value="Visible" />
+        <Style.Triggers>
+            <Trigger Property="Text" Value="">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Trigger>
+            <Trigger Property="Text" Value="Required">
+                <Setter Property="Foreground" Value="{StaticResource Dg.Bad}" />
+            </Trigger>
+            <Trigger Property="Text" Value="Recommended">
+                <Setter Property="Foreground" Value="{StaticResource Dg.Warn}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.WhyText" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,4,0,0" />
+        <Setter Property="Foreground" Value="{StaticResource Dg.Warn}" />
+        <Style.Triggers>
+            <Trigger Property="Text" Value="">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Trigger>
+            <Trigger Property="Tag" Value="Required">
+                <Setter Property="Foreground" Value="{StaticResource Dg.Bad}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Status tag (pill). Tag = Required | Recommended | Complete | Ready. -->
+    <Style x:Key="Dg.Tag" TargetType="Border">
+        <Setter Property="CornerRadius" Value="9" />
+        <Setter Property="Padding" Value="8,1" />
+        <Setter Property="Background" Value="{StaticResource Dg.Panel2}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Required"><Setter Property="Background" Value="{StaticResource Dg.BadSoft}" /></Trigger>
+            <Trigger Property="Tag" Value="Recommended"><Setter Property="Background" Value="{StaticResource Dg.WarnSoft}" /></Trigger>
+            <Trigger Property="Tag" Value="Complete"><Setter Property="Background" Value="{StaticResource Dg.OkSoft}" /></Trigger>
+            <Trigger Property="Tag" Value="Ready"><Setter Property="Background" Value="{StaticResource Dg.OkSoft}" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.TagText" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ink2}" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Required"><Setter Property="Foreground" Value="{StaticResource Dg.Bad}" /></Trigger>
+            <Trigger Property="Tag" Value="Recommended"><Setter Property="Foreground" Value="{StaticResource Dg.Warn}" /></Trigger>
+            <Trigger Property="Tag" Value="Complete"><Setter Property="Foreground" Value="{StaticResource Dg.Ok}" /></Trigger>
+            <Trigger Property="Tag" Value="Ready"><Setter Property="Foreground" Value="{StaticResource Dg.Ok}" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <!-- Numbered circle of a step. -->
+    <Style x:Key="Dg.StepNum" TargetType="Border">
+        <Setter Property="Width" Value="26" />
+        <Setter Property="Height" Value="26" />
+        <Setter Property="CornerRadius" Value="13" />
+        <Setter Property="Background" Value="{StaticResource Dg.AccentSoft}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Dg.AccentLine}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Required"><Setter Property="Background" Value="{StaticResource Dg.BadSoft}" /><Setter Property="BorderBrush" Value="Transparent" /></Trigger>
+            <Trigger Property="Tag" Value="Recommended"><Setter Property="Background" Value="{StaticResource Dg.WarnSoft}" /><Setter Property="BorderBrush" Value="Transparent" /></Trigger>
+            <Trigger Property="Tag" Value="Complete"><Setter Property="Background" Value="{StaticResource Dg.OkSoft}" /><Setter Property="BorderBrush" Value="Transparent" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.StepNumText" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{StaticResource Dg.Accent2}" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Required"><Setter Property="Foreground" Value="{StaticResource Dg.Bad}" /></Trigger>
+            <Trigger Property="Tag" Value="Recommended"><Setter Property="Foreground" Value="{StaticResource Dg.Warn}" /></Trigger>
+            <Trigger Property="Tag" Value="Complete"><Setter Property="Foreground" Value="{StaticResource Dg.Ok}" /></Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Buttons -->
+    <Style x:Key="Dg.Button" TargetType="Button">
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ink}" />
+        <Setter Property="Background" Value="{StaticResource Dg.Panel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Dg.Line2}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="13,5" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Dg.Accent}" /></Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Dg.Accent}" /><Setter TargetName="bd" Property="BorderThickness" Value="2" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="bd" Property="Opacity" Value="0.42" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="Dg.PrimaryButton" TargetType="Button" BasedOn="{StaticResource Dg.Button}">
+        <Setter Property="Foreground" Value="{StaticResource Dg.White}" />
+        <Setter Property="Background" Value="{StaticResource Dg.Accent}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Dg.Accent2}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{StaticResource Dg.Accent2}" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.DangerButton" TargetType="Button" BasedOn="{StaticResource Dg.Button}">
+        <Setter Property="Foreground" Value="{StaticResource Dg.Bad}" />
+    </Style>
+    <Style x:Key="Dg.SmallButton" TargetType="Button" BasedOn="{StaticResource Dg.Button}">
+        <Setter Property="Padding" Value="9,3" />
+        <Setter Property="FontSize" Value="11.5" />
+    </Style>
+    <Style x:Key="Dg.IconButton" TargetType="Button" BasedOn="{StaticResource Dg.Button}">
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource Dg.Muted}" />
+    </Style>
+
+    <!-- Header of a collapsible step: the whole bar toggles it. -->
+    <Style x:Key="Dg.StepToggle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="10" Padding="14,11">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{StaticResource Dg.Panel2}" /></Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="bd" Property="Background" Value="{StaticResource Dg.AccentSoft}" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="Dg.Chevron" TargetType="Path">
+        <Setter Property="Data" Value="M 0,0 L 5,5 L 0,10" />
+        <Setter Property="Stroke" Value="{StaticResource Dg.Muted}" />
+        <Setter Property="StrokeThickness" Value="1.6" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+    </Style>
+
+    <Style x:Key="Dg.Chevron1" TargetType="Path" BasedOn="{StaticResource Dg.Chevron}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Step1Open}" Value="True"><Setter Property="RenderTransform"><Setter.Value><RotateTransform Angle="90" /></Setter.Value></Setter></DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.Chevron2" TargetType="Path" BasedOn="{StaticResource Dg.Chevron}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Step2Open}" Value="True"><Setter Property="RenderTransform"><Setter.Value><RotateTransform Angle="90" /></Setter.Value></Setter></DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.Chevron3" TargetType="Path" BasedOn="{StaticResource Dg.Chevron}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Step3Open}" Value="True"><Setter Property="RenderTransform"><Setter.Value><RotateTransform Angle="90" /></Setter.Value></Setter></DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Segmented choice built from RadioButtons. -->
+    <Style x:Key="Dg.Segment" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ink2}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="bd" Background="Transparent" CornerRadius="5" Padding="14,4" Margin="1">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{StaticResource Dg.Panel3}" /></Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Dg.Accent}" />
+                            <Setter Property="Foreground" Value="{StaticResource Dg.White}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Collapsible group of the result panel. -->
+    <Style x:Key="Dg.Group" TargetType="Expander">
+        <Setter Property="Margin" Value="0,10,0,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <Border BorderBrush="{StaticResource Dg.Line}" BorderThickness="1" CornerRadius="7">
+                        <DockPanel>
+                            <ToggleButton DockPanel.Dock="Top" Content="{TemplateBinding Header}"
+                                          IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="bd" Background="{StaticResource Dg.Panel2}" CornerRadius="6" Padding="10,8" Cursor="Hand">
+                                            <DockPanel>
+                                                <Path x:Name="arrow" DockPanel.Dock="Left" Data="M 0,0 L 4,4 L 0,8" Stroke="{StaticResource Dg.Muted}" StrokeThickness="1.5"
+                                                      Margin="0,0,8,0" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5" />
+                                                <ContentPresenter />
+                                            </DockPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="arrow" Property="RenderTransform"><Setter.Value><RotateTransform Angle="90" /></Setter.Value></Setter></Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bd" Property="Background" Value="{StaticResource Dg.AccentSoft}" /></Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="content" Margin="10,2,10,8" Visibility="Collapsed" />
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True"><Setter TargetName="content" Property="Visibility" Value="Visible" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Verdict banner. Tag = Ok | Warn | Bad | Neutral. -->
+    <Style x:Key="Dg.Verdict" TargetType="Border">
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="12,11" />
+        <Setter Property="Background" Value="{StaticResource Dg.Panel2}" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Ok"><Setter Property="Background" Value="{StaticResource Dg.OkSoft}" /></Trigger>
+            <Trigger Property="Tag" Value="Warn"><Setter Property="Background" Value="{StaticResource Dg.WarnSoft}" /></Trigger>
+            <Trigger Property="Tag" Value="Bad"><Setter Property="Background" Value="{StaticResource Dg.BadSoft}" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.VerdictTitle" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="FontSize" Value="13.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Ok"><Setter Property="Foreground" Value="{StaticResource Dg.Ok}" /></Trigger>
+            <Trigger Property="Tag" Value="Warn"><Setter Property="Foreground" Value="{StaticResource Dg.Warn}" /></Trigger>
+            <Trigger Property="Tag" Value="Bad"><Setter Property="Foreground" Value="{StaticResource Dg.Bad}" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="Dg.VerdictGlyph" TargetType="TextBlock" BasedOn="{StaticResource Dg.VerdictTitle}">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0,-2,10,0" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="Text" Value="•" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Ok"><Setter Property="Text" Value="✓" /></Trigger>
+            <Trigger Property="Tag" Value="Warn"><Setter Property="Text" Value="⚠" /></Trigger>
+            <Trigger Property="Tag" Value="Bad"><Setter Property="Text" Value="✕" /></Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- A number tile of the result panel. -->
+    <Style x:Key="Dg.Kpi" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Dg.Panel2}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Dg.Line}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="7" />
+        <Setter Property="Padding" Value="10,7" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="MinWidth" Value="84" />
+    </Style>
+    <Style x:Key="Dg.KpiValue" TargetType="TextBlock" BasedOn="{StaticResource Dg.Text}">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+
+    <!-- Method-status pill (NEW / UPDATE / KEPT / PLACE). Tag carries the status. -->
+    <Style x:Key="Dg.Pill" TargetType="Border">
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="6,1" />
+        <Setter Property="Background" Value="#5F6C80" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="NEW"><Setter Property="Background" Value="#0A8A5F" /></Trigger>
+            <Trigger Property="Tag" Value="UPDATE"><Setter Property="Background" Value="#0F7F99" /></Trigger>
+            <Trigger Property="Tag" Value="PLACE"><Setter Property="Background" Value="#7640D6" /></Trigger>
+            <Trigger Property="Tag" Value="SKIPPED"><Setter Property="Background" Value="#B3261E" /></Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Inputs, scoped to the Diagrammer by being merged only here. -->
+    <Style TargetType="TextBox">
+        <Setter Property="Background" Value="{StaticResource Dg.Panel}" />
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ink}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Dg.Line2}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="CaretBrush" Value="{StaticResource Dg.Ink}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Style.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="{StaticResource Dg.Accent}" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style TargetType="ComboBox">
+        <Setter Property="Background" Value="{StaticResource Dg.Panel}" />
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ink}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Dg.Line2}" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12.5" />
+    </Style>
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ink}" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style TargetType="ProgressBar" x:Key="Dg.Progress">
+        <Setter Property="Height" Value="6" />
+        <Setter Property="Minimum" Value="0" />
+        <Setter Property="Maximum" Value="100" />
+        <Setter Property="Foreground" Value="{StaticResource Dg.Ok}" />
+        <Setter Property="Background" Value="{StaticResource Dg.Panel3}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid>
+                        <Border CornerRadius="3" Background="{TemplateBinding Background}" />
+                        <Border x:Name="PART_Track" />
+                        <Border x:Name="PART_Indicator" CornerRadius="3" Background="{TemplateBinding Foreground}" HorizontalAlignment="Left" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

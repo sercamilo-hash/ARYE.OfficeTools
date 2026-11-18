@@ -10,6 +10,7 @@ The BauTools buttons **approved for the office**, as a Revit 2026 add-in on the 
 | Zoning | **Zoning Floor Area** | Buildings, typical floor ranges, Sync Ranges and the NYC deductions matrix. **The ZR calculation is not yet validated against an approved filing.** |
 | Zoning | **Region Area → Param** | Writes the area of Filled Regions into a parameter (energy elevations). |
 | Zoning | **Light & Vent** | Adds up the light and vent area of each room's exterior windows and writes the totals to the room. |
+| Sheets | **Sheet Diagrammer** | Builds sheet sets from the typical floors set up in Zoning Floor Area: floor, area or ceiling plans with a view template, extra existing views, sheet matrix, titleblock and sheet collection, with a live preview. Re-runs only add what is missing. |
 | Help | **About** | Version, the BauTools commit the buttons come from, log folder. |
 
 **Installation guide for the office: [INSTALL.md](INSTALL.md).**

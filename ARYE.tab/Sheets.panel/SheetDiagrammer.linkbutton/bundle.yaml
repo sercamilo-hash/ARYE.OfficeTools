@@ -1,0 +1,6 @@
+title: "Sheet\nDiagrammer"
+tooltip: >-
+  Builds sheet sets from the typical floors defined in Zoning Floor Area: plan views (floor, area or ceiling plans) with a view template, additional existing views, a sheet matrix, titleblock and sheet collection, with a live preview.
+author: ARYE
+assembly: ../../../bin/ARYE.OfficeTools.dll
+command_class: ARYE.OfficeTools.Commands.CommandSheetDiagrammer

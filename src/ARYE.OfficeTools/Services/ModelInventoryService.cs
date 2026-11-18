@@ -165,6 +165,25 @@ namespace ARYE.OfficeTools.Services
                 if (Accepts(ceilingRep, template, ViewType.CeilingPlan)) context.CeilingPlanTemplates.Add(reference);
             }
 
+            // Tables: the area schedules a set can copy, and the templates a schedule accepts.
+            List<ViewSchedule> schedules = all.OfType<ViewSchedule>().ToList();
+            var areasCategory = new ElementId(BuiltInCategory.OST_Areas);
+            ViewSchedule scheduleRep = null;
+            foreach (ViewSchedule s in schedules.Where(s => !s.IsTemplate && !s.IsTitleblockRevisionSchedule && !s.IsInternalKeynoteSchedule)
+                .OrderBy(s => s.Name))
+            {
+                if (s.Definition.CategoryId != areasCategory || AreaTableService.IsOurs(s)) continue;
+                scheduleRep = scheduleRep ?? s;
+                context.AreaSchedules.Add(new NamedElementRef { UniqueId = s.UniqueId, ElementIdValue = s.Id.Value, Name = s.Name });
+            }
+            foreach (View template in templates.Where(t => t.ViewType == ViewType.Schedule))
+            {
+                if (scheduleRep == null || Accepts(scheduleRep, template, ViewType.Schedule))
+                {
+                    context.ScheduleTemplates.Add(new NamedElementRef { UniqueId = template.UniqueId, ElementIdValue = template.Id.Value, Name = template.Name });
+                }
+            }
+
             App.Log?.Info($"View templates: {templates.Count} in the model — {context.FloorPlanTemplates.Count} fit floor plans, "
                 + $"{context.AreaPlanTemplates.Count} area plans, {context.CeilingPlanTemplates.Count} ceiling plans. "
                 + "By ViewType: " + string.Join(", ", templates.GroupBy(t => t.ViewType).Select(g => g.Key + "=" + g.Count())));

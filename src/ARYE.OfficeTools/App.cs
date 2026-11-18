@@ -86,6 +86,15 @@ namespace ARYE.OfficeTools
                     "counts for a room when exactly one of its sides has a room; window panels in curtain walls count " +
                     "too, skylights do not. Empty values are not added and every skipped window is listed with its reason.");
 
+                RibbonPanel sheets = application.CreateRibbonPanel(TabName, "Sheets");
+                Add(sheets, "ARYE_SheetDiagrammer", "Sheet\nDiagrammer", typeof(Commands.CommandSheetDiagrammer), "icon_sheets",
+                    "Builds sheet sets from the typical floors defined in Zoning Floor Area: plan views (floor, area or " +
+                    "ceiling plans) with a view template, additional existing views, a sheet matrix, titleblock and sheet " +
+                    "collection, with a live preview.",
+                    "Sets are saved in the model. A run is one set for one building and is a diff: missing views are " +
+                    "created, owned views are updated in place, nothing is moved, and sheets or views the set does not " +
+                    "own are never touched.");
+
                 RibbonPanel help = application.CreateRibbonPanel(TabName, "Help");
                 Add(help, "ARYE_About", "About", typeof(Commands.AboutCommand), "icon_about",
                     $"ARYE Office Tools {Version}: version, the BauTools commit these buttons come from, and the log folder.",
