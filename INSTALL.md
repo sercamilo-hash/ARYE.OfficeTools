@@ -8,6 +8,7 @@ ARYE Office Tools adds an **ARYE** tab to Revit 2026 with the tools approved for
 | **Levels** | Generate Levels, Bubble Heads |
 | **Zoning** | Zoning Floor Area, Region Area → Param, Light & Vent |
 | **Sheets** | Sheet Diagrammer |
+| **Dimensions** | Lines to Dimensions (pyRevit only, not installed by `Install.bat`) |
 | **Help** | About |
 
 > **Zoning Floor Area:** the ZR calculation is not yet validated against an approved filing.

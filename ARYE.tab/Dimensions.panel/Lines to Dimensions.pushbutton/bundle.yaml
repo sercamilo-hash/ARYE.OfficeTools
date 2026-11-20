@@ -1,0 +1,9 @@
+title: Lines to Dimensions
+tooltip: >
+  Turn detail lines drawn as guides into real dimensions.
+  Select the guide lines (or let the tool find every line of a given style
+  in the active view), choose the dimension type, the mode and the categories
+  to dimension. Guide lines that produced a dimension are deleted; the ones
+  that failed are kept and listed in the report.
+author: KHL Architecture
+min_revit_version: 2025

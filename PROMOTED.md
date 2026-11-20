@@ -19,3 +19,7 @@ Written by `build/promote.py`. Every file under `src/` and `tests/` except `App.
 | Sheets | Sheet Diagrammer | `CommandSheetDiagrammer.cs` |
 
 Deferred: Import Survey and Import from CSV (TopoGenerator): until TopoGenerator has an approved release on GitHub
+
+## Python (pyRevit) button — not promoted by `promote.py`
+
+**Lines to Dimensions** (`ARYE.tab/Dimensions.panel/`, `lib/dimassist/`) is a copy of BauTools `pyrevit/BauToolsDimensions.extension` at commit `713b602`. `promote.py` does not touch it: update it by hand from BauTools. Do not install it together with BauTools' own copy (both ship the `dimassist` module).

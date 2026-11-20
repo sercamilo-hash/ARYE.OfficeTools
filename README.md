@@ -11,6 +11,7 @@ The BauTools buttons **approved for the office**, as a Revit 2026 add-in on the 
 | Zoning | **Region Area → Param** | Writes the area of Filled Regions into a parameter (energy elevations). |
 | Zoning | **Light & Vent** | Adds up the light and vent area of each room's exterior windows and writes the totals to the room. |
 | Sheets | **Sheet Diagrammer** | Builds sheet sets from the typical floors set up in Zoning Floor Area: floor, area or ceiling plans with a view template, extra existing views, sheet matrix, titleblock and sheet collection, with a live preview. Re-runs only add what is missing. |
+| Dimensions | **Lines to Dimensions** | Turns detail lines drawn as guides into real dimensions (chain, clear openings, overall), to walls, grids, columns, doors and windows. **pyRevit only** (it is a Python button: `Install.bat` does not include it). Plan views, straight lines; not yet run on a real model. |
 | Help | **About** | Version, the BauTools commit the buttons come from, log folder. |
 
 **Installation guide for the office: [INSTALL.md](INSTALL.md).**

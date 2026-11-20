@@ -1,0 +1,137 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dimension Assist - Lines to Dimensions"
+        Height="700" Width="450"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        HorizontalContentAlignment="Center">
+
+    <Window.Resources>
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,3,0,3"/>
+        </Style>
+        <Style TargetType="RadioButton">
+            <Setter Property="Margin" Value="0,3,0,3"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="Hint">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- ============================ SOURCE ============================ -->
+                <GroupBox Header="Source">
+                    <StackPanel>
+                        <TextBlock Text="Guide line style" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cbLineStyle"
+                    ToolTip="The line style of the detail lines you drew as dimension guides. Only styles that are actually used in the active view are listed." Height="24"/>
+
+                        <RadioButton x:Name="rbSelection"
+                    ToolTip="Dimension only the guide lines you selected in Revit before opening this window. Selected lines of any other style are ignored." GroupName="source"
+                                     Content="Use my selected lines" Margin="0,10,0,0"/>
+                        <RadioButton x:Name="rbAllInView"
+                    ToolTip="Dimension every detail line of the chosen style in the active view, whether it is selected or not." GroupName="source"
+                                     Content="All lines of this style in the active view"/>
+                        <TextBlock x:Name="txtSourceInfo" Style="{StaticResource Hint}"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- ========================== DIMENSION =========================== -->
+                <GroupBox Header="Dimension">
+                    <StackPanel>
+                        <TextBlock Text="Dimension type" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="cbDimType"
+                    ToolTip="The linear dimension type given to every dimension created. It controls text, ticks and units." Height="24"/>
+
+                        <TextBlock Text="Mode" Margin="0,10,0,4" FontWeight="Bold"/>
+                        <RadioButton x:Name="rbChain"
+                    ToolTip="One continuous dimension string through everything each guide line crosses." GroupName="mode" Content="Chain"/>
+                        <RadioButton x:Name="rbClear"
+                    ToolTip="One separate dimension per clear span between two different elements, such as the opening between two walls. Element thicknesses are not measured." GroupName="mode"
+                                     Content="Clear openings only"/>
+                        <RadioButton x:Name="rbOverall"
+                    ToolTip="A single dimension from the first to the last element each guide line crosses." GroupName="mode" Content="Overall"/>
+                        <RadioButton x:Name="rbChainOverall"
+                    ToolTip="Both: the chain, plus an overall dimension stacked above it, offset 8 mm on paper." GroupName="mode"
+                                     Content="Chain + Overall (stacked)"/>
+
+                        <CheckBox x:Name="chkThickness"
+                    ToolTip="Checked: the chain measures both faces of every wall, so wall thicknesses appear. Unchecked: only the first face of each element is used." Margin="0,10,0,0"
+                                  Content="Include wall thickness (use both faces)"/>
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="Unchecked, the chain keeps only the first face of each element."/>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- ========================== CATEGORIES ========================== -->
+                <GroupBox Header="Elements to dimension">
+                    <StackPanel>
+                        <CheckBox x:Name="chkWalls"
+                    ToolTip="Dimension the walls each guide line crosses." Content="Walls"/>
+                        <StackPanel Orientation="Horizontal" Margin="20,0,0,6">
+                            <TextBlock Text="Reference" VerticalAlignment="Center"
+                                       Margin="0,0,8,0"/>
+                            <ComboBox x:Name="cbWallRef"
+                    ToolTip="Faces: dimension to the wall's two finish faces. Centerline: dimension to the wall centerline. Curved walls always use the centerline." Width="180" Height="24">
+                                <ComboBoxItem Content="Faces" ToolTip="Dimension to the wall's two finish faces."/>
+                                <ComboBoxItem Content="Centerline" ToolTip="Dimension to the wall centerline."/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <CheckBox x:Name="chkGrids"
+                    ToolTip="Dimension the grids each guide line crosses." Content="Grids"/>
+                        <CheckBox x:Name="chkColumns"
+                    ToolTip="Dimension the architectural columns each guide line crosses, to their center reference plane." Content="Columns"/>
+                        <CheckBox x:Name="chkStructColumns"
+                    ToolTip="Dimension the structural columns each guide line crosses, to their center reference plane." Content="Structural Columns"/>
+                        <CheckBox x:Name="chkDoors"
+                    ToolTip="Dimension the doors each guide line crosses, to their center reference plane (not to the jambs)." Content="Doors"/>
+                        <CheckBox x:Name="chkWindows"
+                    ToolTip="Dimension the windows each guide line crosses, to their center reference plane (not to the jambs)." Content="Windows"/>
+
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="Columns, doors and windows are dimensioned to their center reference plane."/>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- =========================== CLEAN UP =========================== -->
+                <GroupBox Header="After creating">
+                    <StackPanel>
+                        <CheckBox x:Name="chkDelete"
+                    ToolTip="Delete each guide line once it produced a dimension. Lines that failed are always kept. The whole run is one transaction, so a single Undo restores everything."
+                                  Content="Delete guide lines that produced a dimension"/>
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="Lines that failed are always kept so you can see where the problem is."/>
+                    </StackPanel>
+                </GroupBox>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="btnCancel"
+                    ToolTip="Close this window without creating anything." Content="Cancel" Width="90" Height="28"
+                    Margin="0,0,8,0" Click="cancel_clicked"/>
+            <Button x:Name="btnCreate"
+                    ToolTip="Create the dimensions in the active view, in one transaction. A report lists any guide line that could not be dimensioned and why." Content="Create" Width="110" Height="28"
+                    IsDefault="True" Click="create_clicked"/>
+        </StackPanel>
+    </Grid>
+</Window>
